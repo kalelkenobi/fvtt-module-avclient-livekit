@@ -22,7 +22,7 @@
   ],
   "dependencies": {
     "debug": "^4.4.1",
-	"@livekit/krisp-noise-filter": "^0.2.16",
+	"@livekit/krisp-noise-filter": "^0.3.4",
     "jose": "^6.0.12",
     "livekit-client": "^2.15.3"
   },

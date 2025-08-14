@@ -1281,7 +1281,14 @@ export default class LiveKitClient {
         log.debug("RoomEvent TrackUnpublished:", args);
       })
       .on(RoomEvent.TrackUnsubscribed, this.onTrackUnSubscribed.bind(this))
-	  .on(RoomEvent.LocalTrackPublished, this.onLocalTrackPublished.bind(this))
+	  
+	  // Registering callback to add Krisp noise filter
+	  .on(RoomEvent.LocalTrackPublished, (publication) => {
+        this.onLocalTrackPublished(publication).catch((error: unknown) => {
+          log.debug("Error during LocalTrackPublished event:", error);
+        });
+      })
+	  
       .on(RoomEvent.LocalTrackUnpublished, (...args) => {
         log.debug("RoomEvent LocalTrackUnpublished:", args);
       })
