@@ -1,3 +1,6 @@
+# Changes from main project
+this fork only adds krisp noise cancellation integration and is intended for personal use.
+
 # LiveKit AVClient
 
 [![Join our Discord](https://img.shields.io/discord/909201876740890694?color=5865F2&logo=discord&logoColor=white)](https://discord.gg/Tcp9JtbpC5)
