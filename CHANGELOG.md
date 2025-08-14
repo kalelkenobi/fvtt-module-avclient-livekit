@@ -1,5 +1,9 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.6.1.1
+
+- Added Krisp Noise filter v0.3.4. Filter only works with free/paid LiveKit Cloud server.
+
 ## 0.6.1
 
 - Mirror the local camera view, fixing a bug in core FoundryVTT v13.
