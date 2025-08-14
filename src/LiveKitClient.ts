@@ -27,6 +27,7 @@ import {
   AudioPresets,
   TrackPublishOptions,
 } from "livekit-client";
+import { KrispNoiseFilter, isKrispNoiseFilterSupported } from "@livekit/krisp-noise-filter";
 import { LANG_NAME, MODULE_NAME } from "./utils/constants";
 import LiveKitAVClient from "./LiveKitAVClient";
 import {
@@ -754,6 +755,20 @@ export default class LiveKitClient {
     }
   }
 
+  async onLocalTrackPublished(trackPublication: TrackPublication): Promise<void> {
+    log.debug("RoomEvent LocalTrackPublished:", trackPublication);
+    if (
+      isKrispNoiseFilterSupported() &&
+      trackPublication.source === Track.Source.Microphone &&
+      trackPublication.track instanceof LocalAudioTrack
+    ) {
+      const krispProcessor = KrispNoiseFilter();
+      await trackPublication.track.setProcessor(krispProcessor);
+      await krispProcessor.setEnabled(true);
+      log.debug("Krisp noise filter is enabled");
+    }
+  }
+
   onParticipantConnected(participant: RemoteParticipant): void {
     log.debug("onParticipantConnected:", participant);
 
@@ -1266,6 +1281,7 @@ export default class LiveKitClient {
         log.debug("RoomEvent TrackUnpublished:", args);
       })
       .on(RoomEvent.TrackUnsubscribed, this.onTrackUnSubscribed.bind(this))
+	  .on(RoomEvent.LocalTrackPublished, this.onLocalTrackPublished.bind(this))
       .on(RoomEvent.LocalTrackUnpublished, (...args) => {
         log.debug("RoomEvent LocalTrackUnpublished:", args);
       })

@@ -1,5 +1,6 @@
 # Changes from main project
 this fork only adds krisp noise cancellation integration and is intended for personal use.
+All credit for this awesome module goes to https://github.com/bekriebel
 
 # LiveKit AVClient
 
