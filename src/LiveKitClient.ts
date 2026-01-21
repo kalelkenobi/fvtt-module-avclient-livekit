@@ -534,9 +534,10 @@ export default class LiveKitClient {
       videoElement.after(audioElement);
 
       // Bind volume control for microphone audio
-      const volumeSlider = ui.webrtc?.element.querySelector(
-        `.camera-view[data-user="${userId}"] .webrtc-volume-slider`,
-      );
+      const volumeSlider =
+        videoElement.parentElement?.parentElement?.querySelector(
+          ".webrtc-volume-slider",
+        );
       volumeSlider?.addEventListener("change", this.onVolumeChange.bind(this));
     }
 
