@@ -1040,8 +1040,12 @@ export default class LiveKitClient {
    */
   onVolumeChange(event: Event): void {
     const input = event.currentTarget;
-    if (!(input instanceof HTMLInputElement)) {
-      log.warn("Volume change event did not originate from an input element");
+    if (
+      !(input instanceof foundry.applications.elements.HTMLRangePickerElement)
+    ) {
+      log.warn(
+        "Volume change event did not originate from a range picker element",
+      );
       return;
     }
     const box = input.closest(".camera-view");
