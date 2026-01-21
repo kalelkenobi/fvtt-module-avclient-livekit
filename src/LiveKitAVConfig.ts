@@ -14,8 +14,9 @@ interface PatreonLoginEvent extends MessageEvent {
   id: string;
 }
 
-export default class LiveKitAVConfig extends foundry.applications.settings.menus
-  .AVConfig {
+export default class LiveKitAVConfig
+  extends foundry.applications.settings.menus.AVConfig
+{
   /** @override */
   static DEFAULT_OPTIONS = {
     tag: "form",
@@ -356,10 +357,12 @@ export default class LiveKitAVConfig extends foundry.applications.settings.menus
       coreData.rtcClientSettings,
       { inplace: false },
     );
-    promises.push(
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-      game.settings?.set("core", "rtcClientSettings", clientUpdates),
-    );
+    if (game.settings) {
+      promises.push(
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+        game.settings.set("core", "rtcClientSettings", clientUpdates),
+      );
+    }
 
     await Promise.all(promises);
 
