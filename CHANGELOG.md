@@ -1,5 +1,10 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.6.4
+
+- Update dependencies
+- Fix volume slider on standard and popped out camera views
+
 ## 0.6.3
 
 - Update dependencies
