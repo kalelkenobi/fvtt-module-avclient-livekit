@@ -1,2 +1,3 @@
 onlyBuiltDependencies:
   - esbuild
+  - "@league-of-foundry-developers/foundry-vtt-types"
