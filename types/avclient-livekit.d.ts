@@ -77,6 +77,13 @@ declare global {
     "avclient-livekit.audioMusicMode": foundry.data.fields.BooleanField<{
       initial: false;
     }>;
+    "avclient-livekit.audioMusicModeRate": foundry.data.fields.NumberField<{
+      initial: 256;
+      min: 8;
+      max: 500;
+      step: 8;
+      integer: true;
+    }>;
     "avclient-livekit.useExternalAV": foundry.data.fields.BooleanField<{
       initial: false;
     }>;

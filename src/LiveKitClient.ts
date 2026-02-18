@@ -197,8 +197,8 @@ export default class LiveKitClient {
     const connectionQualityIndicator = $(
       `<div class="connection-quality-indicator unknown" title="${
         game.i18n?.localize(
-          `${LANG_NAME}.connectionQuality.${ConnectionQuality.Unknown}`,
-        ) ?? "Connectin Quality Unknown"
+        `${LANG_NAME}.connectionQuality.${ConnectionQuality.Unknown}`,
+      ) ?? "Connectin Quality Unknown"
       }"></div>`,
     );
 
@@ -400,7 +400,8 @@ export default class LiveKitClient {
 
     const audioCaptureOptions: AudioCaptureOptions = {
       deviceId: { ideal: audioSrc },
-      channelCount: { ideal: 1 },
+      channelCount: { ideal: 2 },
+      voiceIsolation: true,
     };
 
     // Set audio parameters for music streaming mode
@@ -408,7 +409,7 @@ export default class LiveKitClient {
       audioCaptureOptions.autoGainControl = false;
       audioCaptureOptions.echoCancellation = false;
       audioCaptureOptions.noiseSuppression = false;
-      audioCaptureOptions.channelCount = { ideal: 2 };
+      audioCaptureOptions.voiceIsolation = false;
     }
 
     return audioCaptureOptions;
@@ -818,7 +819,7 @@ export default class LiveKitClient {
     // Clear breakout room cache if user is leaving a breakout room
     if (
       this.settings.get("client", `users.${fvttUserId}.liveKitBreakoutRoom`) ===
-        this.liveKitAvClient.room &&
+      this.liveKitAvClient.room &&
       this.liveKitAvClient.room === this.breakoutRoom
     ) {
       this.settings.set(
@@ -842,7 +843,7 @@ export default class LiveKitClient {
     log.warn("Reconnecting to room");
     ui.notifications?.warn(
       game.i18n?.localize("WEBRTC.ConnectionLostWarning") ??
-        "ConnectionLostWarning",
+      "ConnectionLostWarning",
     );
   }
 
@@ -1083,18 +1084,18 @@ export default class LiveKitClient {
     );
 
     // Set resolution higher if simulcast is enabled
-    let videoResolution = VideoPresets43.h180.resolution;
+    let videoResolution = VideoPresets43.h480.resolution;
     if (this.trackPublishOptions.simulcast) {
-      videoResolution = VideoPresets43.h720.resolution;
+      videoResolution = VideoPresets43.h1080.resolution;
     }
 
     return typeof videoSrc === "string" &&
       videoSrc !== "disabled" &&
       canBroadcastVideo
       ? {
-          deviceId: { ideal: videoSrc },
-          resolution: videoResolution,
-        }
+        deviceId: { ideal: videoSrc },
+        resolution: videoResolution,
+      }
       : false;
   }
 
@@ -1111,7 +1112,7 @@ export default class LiveKitClient {
       content: `<p>${
         game.i18n?.localize(`${LANG_NAME}.externalAVJoinMessage`) ??
         "externalAVJoinMessage"
-      }</p>`,
+        }</p>`,
       yes: {
         label: `${LANG_NAME}.externalAVJoinButton`,
         icon: "fa-solid fa-check",
@@ -1306,6 +1307,7 @@ export default class LiveKitClient {
         autoGainControl: false,
         echoCancellation: false,
         noiseSuppression: false,
+        voiceIsolation: false,
         channelCount: { ideal: 2 },
       };
 
@@ -1336,8 +1338,9 @@ export default class LiveKitClient {
         // Get publishing options
         const screenTrackPublishOptions = this.trackPublishOptions;
 
-        // Use musicHighQuality audio preset for screen share
-        screenTrackPublishOptions.audioPreset = AudioPresets.musicHighQuality;
+        // Use the music mode bitrate for screen share audio
+        const screenAudioMusicModeRate = (game.settings?.get(MODULE_NAME, "audioMusicModeRate") ?? 256) * 1000;
+        screenTrackPublishOptions.audioPreset = { maxBitrate: screenAudioMusicModeRate };
 
         // Publish the track
         await this.liveKitRoom?.localParticipant.publishTrack(
@@ -1368,14 +1371,15 @@ export default class LiveKitClient {
 
   get trackPublishOptions(): TrackPublishOptions {
     const trackPublishOptions: TrackPublishOptions = {
-      audioPreset: AudioPresets.speech,
+      audioPreset: AudioPresets.musicHighQualityStereo,
       simulcast: true,
       videoCodec: "vp8",
-      videoSimulcastLayers: [VideoPresets43.h180, VideoPresets43.h360],
+      videoSimulcastLayers: [VideoPresets43.h480, VideoPresets43.h1080],
     };
 
     if (game.settings?.get(MODULE_NAME, "audioMusicMode")) {
-      trackPublishOptions.audioPreset = AudioPresets.musicHighQuality;
+      const audioBitrate = (game.settings.get(MODULE_NAME, "audioMusicModeRate") ?? 256) * 1000;
+      trackPublishOptions.audioPreset = { maxBitrate: audioBitrate };
     }
 
     return trackPublishOptions;

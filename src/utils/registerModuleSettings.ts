@@ -63,6 +63,30 @@ export default function registerModuleSettings(): void {
     },
   });
 
+  game.settings?.register(MODULE_NAME, "audioMusicModeRate", {
+    name: "LIVEKITAVCLIENT.audioMusicModeRate",
+    hint: "LIVEKITAVCLIENT.audioMusicModeRateHint",
+    scope: "client",
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    config: game.settings.get(MODULE_NAME, "audioMusicMode") ?? false,
+    default: 256,
+    type: new foundry.data.fields.NumberField({
+      initial: 256,
+      min: 8,
+      max: 500,
+      step: 8,
+      integer: true,
+    }),
+    requiresReload: true,
+    onChange: () => {
+      game.webrtc?.client._liveKitClient
+        .changeAudioSource(true)
+        .catch((error: unknown) => {
+          log.error("audioMusicModeRate: Error changing audio source", error);
+        });
+    },
+  });
+
   game.settings?.register(MODULE_NAME, "useExternalAV", {
     name: "LIVEKITAVCLIENT.useExternalAV",
     hint: "LIVEKITAVCLIENT.useExternalAVHint",

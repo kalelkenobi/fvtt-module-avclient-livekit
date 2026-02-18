@@ -1,5 +1,15 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.6.5k
+
+- Restore use of configurable bitrate for Music Mode
+- Apply the same bitrate for screen share audio tracks
+- Increase default Music Mode max bitrate from 96 kbps to 256 kbps
+- Change default AudioPreset to musicHighQualityStereo (128 kbps)
+- Increase default video resolution presets to 480 and 1080
+- Enable new voiceIsolation setting for standard tracks (disabled in Music Mode)
+- Update module URLs to kalelkenobi fork
+
 ## 0.6.5
 
 - Update dependencies, including livekit-client v2.17.1
