@@ -1061,6 +1061,11 @@ export default class LiveKitClient {
         audioElement.volume = volume;
       }
     }
+
+    // HACK: Needed to fix a bug in FVTT v13
+    if (box.dataset.user) {
+      this.settings.set("client", `users.${box.dataset.user}.volume`, volume);
+    }
   }
 
   onWindowClick(): void {
