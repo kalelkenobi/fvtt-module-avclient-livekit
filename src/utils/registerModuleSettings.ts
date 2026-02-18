@@ -54,6 +54,7 @@ export default function registerModuleSettings(): void {
     config: true,
     default: false,
     type: new foundry.data.fields.BooleanField({ initial: false }),
+    requiresReload: true,
     onChange: () => {
       game.webrtc?.client._liveKitClient
         .changeAudioSource(true)
@@ -77,7 +78,6 @@ export default function registerModuleSettings(): void {
       step: 8,
       integer: true,
     }),
-    requiresReload: true,
     onChange: () => {
       game.webrtc?.client._liveKitClient
         .changeAudioSource(true)
