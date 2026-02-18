@@ -1,5 +1,9 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.6.5.1k
+
+- Add requiresReload to audioMusicMode and remove it from audioMusicModeRate
+
 ## 0.6.5k
 
 - Restore use of configurable bitrate for Music Mode
