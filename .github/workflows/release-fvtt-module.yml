@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 2
       - name: Check for new version
@@ -31,11 +31,15 @@ jobs:
     if: ${{ needs.check_version.outputs.module_current_version != needs.check_version.outputs.module_previous_version }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Install pnpm
         uses: pnpm/action-setup@v4
+      - name: Setup node
+        uses: actions/setup-node@v6
+        with:
+          cache: "pnpm"
       - name: Create tag changelog
         id: changelog
         run: |
