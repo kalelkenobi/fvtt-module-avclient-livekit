@@ -1,5 +1,13 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.6.5.2k
+
+- Update video codec to AV1 with VP8 backup
+- Upgrade default video resolutions
+- Increase audio music mode rate setting maximum to 510
+- Consolidate music mode audio and track publishing options into new helper methods
+- Update livekit-client to v2.17.2
+
 ## 0.6.5.1k
 
 - Add requiresReload to audioMusicMode and remove it from audioMusicModeRate
