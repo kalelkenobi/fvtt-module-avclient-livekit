@@ -80,7 +80,7 @@ declare global {
     "avclient-livekit.audioMusicModeRate": foundry.data.fields.NumberField<{
       initial: 256;
       min: 8;
-      max: 500;
+      max: 510;
       step: 8;
       integer: true;
     }>;
