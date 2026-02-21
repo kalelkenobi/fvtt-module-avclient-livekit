@@ -406,10 +406,7 @@ export default class LiveKitClient {
 
     // Set audio parameters for music streaming mode
     if (game.settings?.get(MODULE_NAME, "audioMusicMode")) {
-      audioCaptureOptions.autoGainControl = false;
-      audioCaptureOptions.echoCancellation = false;
-      audioCaptureOptions.noiseSuppression = false;
-      audioCaptureOptions.voiceIsolation = false;
+      this.setMusicModeAudioOptions(audioCaptureOptions);
     }
 
     return audioCaptureOptions;
@@ -1083,11 +1080,7 @@ export default class LiveKitClient {
       game.user?.id ?? "",
     );
 
-    // Set resolution higher if simulcast is enabled
-    let videoResolution = VideoPresets43.h480.resolution;
-    if (this.trackPublishOptions.simulcast) {
-      videoResolution = VideoPresets43.h1080.resolution;
-    }
+    let videoResolution = VideoPresets43.h1080.resolution;
 
     return typeof videoSrc === "string" &&
       videoSrc !== "disabled" &&
@@ -1303,13 +1296,10 @@ export default class LiveKitClient {
 
     if (enabled) {
       // Configure audio options
-      const screenAudioOptions: AudioCaptureOptions = {
-        autoGainControl: false,
-        echoCancellation: false,
-        noiseSuppression: false,
-        voiceIsolation: false,
-        channelCount: { ideal: 2 },
-      };
+      const screenAudioOptions: AudioCaptureOptions = {};
+      
+      // Use music mode audio options
+      this.setMusicModeAudioOptions(screenAudioOptions);
 
       // Get screen tracks
       this.screenTracks = await createLocalScreenTracks({
@@ -1338,9 +1328,8 @@ export default class LiveKitClient {
         // Get publishing options
         const screenTrackPublishOptions = this.trackPublishOptions;
 
-        // Use the music mode bitrate for screen share audio
-        const screenAudioMusicModeRate = (game.settings?.get(MODULE_NAME, "audioMusicModeRate") ?? 256) * 1000;
-        screenTrackPublishOptions.audioPreset = { maxBitrate: screenAudioMusicModeRate };
+        // Use music mode audio options
+        this.setMusicModeTrackOptions(screenTrackPublishOptions);
 
         // Publish the track
         await this.liveKitRoom?.localParticipant.publishTrack(
@@ -1373,15 +1362,31 @@ export default class LiveKitClient {
     const trackPublishOptions: TrackPublishOptions = {
       audioPreset: AudioPresets.musicHighQualityStereo,
       simulcast: true,
-      videoCodec: "vp8",
-      videoSimulcastLayers: [VideoPresets43.h480, VideoPresets43.h1080],
+      videoCodec: "av1",
+      backupCodec: {codec: "vp8"},
+      videoSimulcastLayers: [VideoPresets43.h720, VideoPresets43.h1440],
     };
 
     if (game.settings?.get(MODULE_NAME, "audioMusicMode")) {
-      const audioBitrate = (game.settings.get(MODULE_NAME, "audioMusicModeRate") ?? 256) * 1000;
-      trackPublishOptions.audioPreset = { maxBitrate: audioBitrate };
+      this.setMusicModeTrackOptions(trackPublishOptions);
     }
 
     return trackPublishOptions;
+  }
+
+  setMusicModeTrackOptions(trackPublishOptions: TrackPublishOptions): void {
+    const audioBitrate = (game.settings?.get(MODULE_NAME, "audioMusicModeRate") ?? 256) * 1000;
+    trackPublishOptions.audioPreset = { maxBitrate: audioBitrate };
+    trackPublishOptions.forceStereo = true;
+    trackPublishOptions.dtx = false;
+    trackPublishOptions.red = false;
+  }
+
+  setMusicModeAudioOptions(audioCaptureOptions: AudioCaptureOptions): void {
+    audioCaptureOptions.autoGainControl = false;
+    audioCaptureOptions.echoCancellation = false;
+    audioCaptureOptions.noiseSuppression = false;
+    audioCaptureOptions.voiceIsolation = false;
+    audioCaptureOptions.channelCount = { ideal: 2 };
   }
 }
