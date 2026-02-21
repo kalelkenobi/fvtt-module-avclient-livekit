@@ -1080,7 +1080,7 @@ export default class LiveKitClient {
       game.user?.id ?? "",
     );
 
-    let videoResolution = VideoPresets43.h1080.resolution;
+    const videoResolution = VideoPresets43.h1080.resolution;
 
     return typeof videoSrc === "string" &&
       videoSrc !== "disabled" &&
