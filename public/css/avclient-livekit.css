@@ -44,6 +44,7 @@
   line-height: 30px;
   color: #ba2200;
 }
+
 .camera-view .status-remote-hidden.hidden,
 .camera-view .status-remote-muted.hidden,
 .camera-view .status-remote-ptt.hidden {
@@ -77,6 +78,43 @@
   transform: scaleX(-1);
 }
 
-#av-config .form-fields > button {
+#av-config .form-fields>button {
   flex-basis: 100%;
+}
+
+/* Settings tab scrollbar for advanced mode */
+#av-config .tab[data-tab="livekit"] {
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+/* Allow resizing the camera dock */
+#camera-views:not(.minimized) {
+  overflow: auto;
+  min-width: 250px;
+  min-height: 175px;
+  container-type: size;
+}
+
+#camera-views:not(.minimized).vertical {
+  resize: horizontal;
+}
+
+#camera-views:not(.minimized).horizontal {
+  resize: vertical;
+}
+
+#camera-views:not(.minimized) .camera-view {
+  aspect-ratio: 4 / 3;
+  max-width: calc(95cqh * 4 / 3);
+  max-height: calc(95cqw * 3 / 4);
+  flex: 1;
+}
+
+#camera-views:not(.minimized) .video-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

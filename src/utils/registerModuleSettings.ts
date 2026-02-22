@@ -57,6 +57,16 @@ export default function registerModuleSettings(): void {
     requiresReload: true,
   });
 
+  game.settings?.register(MODULE_NAME, "useExternalAV", {
+    name: "LIVEKITAVCLIENT.useExternalAV",
+    hint: "LIVEKITAVCLIENT.useExternalAVHint",
+    scope: "client",
+    config: true,
+    default: false,
+    type: new foundry.data.fields.BooleanField({ initial: false }),
+    requiresReload: true,
+  });
+
   // Advanced Mode: Primary Input Source Options
   game.settings?.register(MODULE_NAME, "autoGainControl", {
     name: "LIVEKITAVCLIENT.autoGainControl",
@@ -225,16 +235,6 @@ export default function registerModuleSettings(): void {
         h264: "H.264",
       },
     }),
-    requiresReload: true,
-  });
-
-  game.settings?.register(MODULE_NAME, "useExternalAV", {
-    name: "LIVEKITAVCLIENT.useExternalAV",
-    hint: "LIVEKITAVCLIENT.useExternalAVHint",
-    scope: "client",
-    config: true,
-    default: false,
-    type: new foundry.data.fields.BooleanField({ initial: false }),
     requiresReload: true,
   });
 
