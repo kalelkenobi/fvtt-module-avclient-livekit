@@ -1,5 +1,12 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.6.5.3k
+
+- Replace audio music mode with advanced audio settings including granular controls, audio bitrate, and video codec options
+- Change default video codec from AV1 to VP9
+- Enhance UI with scrollable settings and resizable camera dock, and simplify audio/video setting labels
+- Shorten DTX, RED, and external A/V option labels in localization files
+
 ## 0.6.5.2k
 
 - Update video codec to AV1 with VP8 backup
