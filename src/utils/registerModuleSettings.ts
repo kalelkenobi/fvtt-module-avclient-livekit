@@ -47,32 +47,98 @@ export default function registerModuleSettings(): void {
     requiresReload: false,
   });
 
-  game.settings?.register(MODULE_NAME, "audioMusicMode", {
-    name: "LIVEKITAVCLIENT.audioMusicMode",
-    hint: "LIVEKITAVCLIENT.audioMusicModeHint",
+  game.settings?.register(MODULE_NAME, "advancedAudioMode", {
+    name: "LIVEKITAVCLIENT.advancedAudioMode",
+    hint: "LIVEKITAVCLIENT.advancedAudioModeHint",
     scope: "client",
     config: true,
     default: false,
     type: new foundry.data.fields.BooleanField({ initial: false }),
     requiresReload: true,
+  });
+
+  // Advanced Mode: Primary Input Source Options
+  game.settings?.register(MODULE_NAME, "autoGainControl", {
+    name: "LIVEKITAVCLIENT.autoGainControl",
+    hint: "LIVEKITAVCLIENT.autoGainControlHint",
+    scope: "client",
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    config: game.settings.get(MODULE_NAME, "advancedAudioMode") ?? false,
+    default: true,
+    type: new foundry.data.fields.BooleanField({ initial: true }),
     onChange: () => {
       game.webrtc?.client._liveKitClient
         .changeAudioSource(true)
         .catch((error: unknown) => {
-          log.error("audioMusicMode: Error changing audio source", error);
+          log.error("autoGainControl: Error changing audio source", error);
         });
     },
   });
 
-  game.settings?.register(MODULE_NAME, "audioMusicModeRate", {
-    name: "LIVEKITAVCLIENT.audioMusicModeRate",
-    hint: "LIVEKITAVCLIENT.audioMusicModeRateHint",
+  game.settings?.register(MODULE_NAME, "echoCancellation", {
+    name: "LIVEKITAVCLIENT.echoCancellation",
+    hint: "LIVEKITAVCLIENT.echoCancellationHint",
     scope: "client",
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    config: game.settings.get(MODULE_NAME, "audioMusicMode") ?? false,
-    default: 256,
+    config: game.settings.get(MODULE_NAME, "advancedAudioMode") ?? false,
+    default: true,
+    type: new foundry.data.fields.BooleanField({ initial: true }),
+    onChange: () => {
+      game.webrtc?.client._liveKitClient
+        .changeAudioSource(true)
+        .catch((error: unknown) => {
+          log.error("echoCancellation: Error changing audio source", error);
+        });
+    },
+  });
+
+  game.settings?.register(MODULE_NAME, "noiseSuppression", {
+    name: "LIVEKITAVCLIENT.noiseSuppression",
+    hint: "LIVEKITAVCLIENT.noiseSuppressionHint",
+    scope: "client",
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    config: game.settings.get(MODULE_NAME, "advancedAudioMode") ?? false,
+    default: true,
+    type: new foundry.data.fields.BooleanField({ initial: true }),
+    onChange: () => {
+      game.webrtc?.client._liveKitClient
+        .changeAudioSource(true)
+        .catch((error: unknown) => {
+          log.error("noiseSuppression: Error changing audio source", error);
+        });
+    },
+  });
+
+  game.settings?.register(MODULE_NAME, "voiceIsolation", {
+    name: "LIVEKITAVCLIENT.voiceIsolation",
+    hint: "LIVEKITAVCLIENT.voiceIsolationHint",
+    scope: "client",
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    config: game.settings.get(MODULE_NAME, "advancedAudioMode") ?? false,
+    default: true,
+    type: new foundry.data.fields.BooleanField({ initial: true }),
+    onChange: () => {
+      game.webrtc?.client._liveKitClient
+        .changeAudioSource(true)
+        .catch((error: unknown) => {
+          log.error("voiceIsolation: Error changing audio source", error);
+        });
+    },
+  });
+
+  //
+  // Advanced Mode: Track Options
+  //
+
+  game.settings?.register(MODULE_NAME, "audioBitRate", {
+    name: "LIVEKITAVCLIENT.audioBitRate",
+    hint: "LIVEKITAVCLIENT.audioBitRateHint",
+    scope: "client",
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    config: game.settings.get(MODULE_NAME, "advancedAudioMode") ?? false,
+    default: 128,
     type: new foundry.data.fields.NumberField({
-      initial: 256,
+      initial: 128,
       min: 8,
       max: 510,
       step: 8,
@@ -82,9 +148,84 @@ export default function registerModuleSettings(): void {
       game.webrtc?.client._liveKitClient
         .changeAudioSource(true)
         .catch((error: unknown) => {
-          log.error("audioMusicModeRate: Error changing audio source", error);
+          log.error("audioBitRate: Error changing audio source", error);
         });
     },
+  });
+
+  game.settings?.register(MODULE_NAME, "dtx", {
+    name: "LIVEKITAVCLIENT.dtx",
+    hint: "LIVEKITAVCLIENT.dtxHint",
+    scope: "client",
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    config: game.settings.get(MODULE_NAME, "advancedAudioMode") ?? false,
+    default: true,
+    type: new foundry.data.fields.BooleanField({ initial: true }),
+    onChange: () => {
+      game.webrtc?.client._liveKitClient
+        .changeAudioSource(true)
+        .catch((error: unknown) => {
+          log.error("dtx: Error changing audio source", error);
+        });
+    },
+  });
+
+  game.settings?.register(MODULE_NAME, "red", {
+    name: "LIVEKITAVCLIENT.red",
+    hint: "LIVEKITAVCLIENT.redHint",
+    scope: "client",
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    config: game.settings.get(MODULE_NAME, "advancedAudioMode") ?? false,
+    default: true,
+    type: new foundry.data.fields.BooleanField({ initial: true }),
+    onChange: () => {
+      game.webrtc?.client._liveKitClient
+        .changeAudioSource(true)
+        .catch((error: unknown) => {
+          log.error("red: Error changing audio source", error);
+        });
+    },
+  });
+
+  game.settings?.register(MODULE_NAME, "videoCodec", {
+    name: "LIVEKITAVCLIENT.videoCodec",
+    hint: "LIVEKITAVCLIENT.videoCodecHint",
+    scope: "client",
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    config: game.settings.get(MODULE_NAME, "advancedAudioMode") ?? false,
+    default: "av1",
+    type: new foundry.data.fields.StringField({
+      required: true,
+      blank: false,
+      initial: "av1",
+      choices: {
+        vp8: "VP8",
+        h264: "H.264",
+        vp9: "VP9",
+        av1: "AV1",
+        h265: "H.265",
+      },
+    }),
+    requiresReload: true,
+  });
+
+  game.settings?.register(MODULE_NAME, "backupCodec", {
+    name: "LIVEKITAVCLIENT.backupCodec",
+    hint: "LIVEKITAVCLIENT.backupCodecHint",
+    scope: "client",
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    config: game.settings.get(MODULE_NAME, "advancedAudioMode") ?? false,
+    default: "vp8",
+    type: new foundry.data.fields.StringField({
+      required: true,
+      blank: false,
+      initial: "vp8",
+      choices: {
+        vp8: "VP8",
+        h264: "H.264",
+      },
+    }),
+    requiresReload: true,
   });
 
   game.settings?.register(MODULE_NAME, "useExternalAV", {

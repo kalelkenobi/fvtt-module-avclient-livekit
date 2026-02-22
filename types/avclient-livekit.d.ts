@@ -74,15 +74,39 @@ declare global {
     "avclient-livekit.displayConnectionQuality": foundry.data.fields.BooleanField<{
       initial: true;
     }>;
-    "avclient-livekit.audioMusicMode": foundry.data.fields.BooleanField<{
+    "avclient-livekit.advancedAudioMode": foundry.data.fields.BooleanField<{
       initial: false;
     }>;
-    "avclient-livekit.audioMusicModeRate": foundry.data.fields.NumberField<{
-      initial: 256;
+    "avclient-livekit.autoGainControl": foundry.data.fields.BooleanField<{
+      initial: true;
+    }>;
+    "avclient-livekit.echoCancellation": foundry.data.fields.BooleanField<{
+      initial: true;
+    }>;
+    "avclient-livekit.noiseSuppression": foundry.data.fields.BooleanField<{
+      initial: true;
+    }>;
+    "avclient-livekit.voiceIsolation": foundry.data.fields.BooleanField<{
+      initial: true;
+    }>;
+    "avclient-livekit.audioBitRate": foundry.data.fields.NumberField<{
+      initial: 128;
       min: 8;
       max: 510;
       step: 8;
       integer: true;
+    }>;
+    "avclient-livekit.dtx": foundry.data.fields.BooleanField<{
+      initial: true;
+    }>;
+    "avclient-livekit.red": foundry.data.fields.BooleanField<{
+      initial: true;
+    }>;
+    "avclient-livekit.videoCodec": foundry.data.fields.StringField<{
+      initial: "av1";
+    }>;
+    "avclient-livekit.backupCodec": foundry.data.fields.StringField<{
+      initial: "vp8";
     }>;
     "avclient-livekit.useExternalAV": foundry.data.fields.BooleanField<{
       initial: false;

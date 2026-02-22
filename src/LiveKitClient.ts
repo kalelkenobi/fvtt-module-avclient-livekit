@@ -404,9 +404,9 @@ export default class LiveKitClient {
       voiceIsolation: true,
     };
 
-    // Set audio parameters for music streaming mode
-    if (game.settings?.get(MODULE_NAME, "audioMusicMode")) {
-      this.setMusicModeAudioOptions(audioCaptureOptions);
+    // Apply advanced audio input options if enabled
+    if (game.settings?.get(MODULE_NAME, "advancedAudioMode")) {
+      this.applyAdvancedAudioOptions(audioCaptureOptions);
     }
 
     return audioCaptureOptions;
@@ -1296,10 +1296,13 @@ export default class LiveKitClient {
 
     if (enabled) {
       // Configure audio options
-      const screenAudioOptions: AudioCaptureOptions = {};
-      
-      // Use music mode audio options
-      this.setMusicModeAudioOptions(screenAudioOptions);
+      const screenAudioOptions: AudioCaptureOptions = {
+        channelCount: { ideal: 2 },
+        autoGainControl: false,
+        echoCancellation: false,
+        noiseSuppression: false,
+        voiceIsolation: false,
+      };
 
       // Get screen tracks
       this.screenTracks = await createLocalScreenTracks({
@@ -1325,16 +1328,9 @@ export default class LiveKitClient {
           }
         }
 
-        // Get publishing options
-        const screenTrackPublishOptions = this.trackPublishOptions;
-
-        // Use music mode audio options
-        this.setMusicModeTrackOptions(screenTrackPublishOptions);
-
-        // Publish the track
         await this.liveKitRoom?.localParticipant.publishTrack(
           screenTrack,
-          screenTrackPublishOptions,
+          this.trackPublishOptions,
         );
       }
     } else {
@@ -1361,32 +1357,33 @@ export default class LiveKitClient {
   get trackPublishOptions(): TrackPublishOptions {
     const trackPublishOptions: TrackPublishOptions = {
       audioPreset: AudioPresets.musicHighQualityStereo,
+      forceStereo: true,
       simulcast: true,
       videoCodec: "av1",
-      backupCodec: {codec: "vp8"},
+      backupCodec: { codec: "vp8" },
       videoSimulcastLayers: [VideoPresets43.h720, VideoPresets43.h1440],
     };
 
-    if (game.settings?.get(MODULE_NAME, "audioMusicMode")) {
-      this.setMusicModeTrackOptions(trackPublishOptions);
+    // Apply advanced track publish options if enabled
+    if (game.settings?.get(MODULE_NAME, "advancedAudioMode")) {
+      this.applyAdvancedTrackOptions(trackPublishOptions);
     }
 
     return trackPublishOptions;
   }
 
-  setMusicModeTrackOptions(trackPublishOptions: TrackPublishOptions): void {
-    const audioBitrate = (game.settings?.get(MODULE_NAME, "audioMusicModeRate") ?? 256) * 1000;
-    trackPublishOptions.audioPreset = { maxBitrate: audioBitrate };
-    trackPublishOptions.forceStereo = true;
-    trackPublishOptions.dtx = false;
-    trackPublishOptions.red = false;
+  applyAdvancedTrackOptions(trackPublishOptions: TrackPublishOptions): void {
+    trackPublishOptions.audioPreset = { maxBitrate: (game.settings?.get(MODULE_NAME, "audioBitRate") ?? 128) * 1000 };
+    trackPublishOptions.dtx = game.settings?.get(MODULE_NAME, "dtx");
+    trackPublishOptions.red = game.settings?.get(MODULE_NAME, "red");
+    trackPublishOptions.videoCodec = game.settings?.get(MODULE_NAME, "videoCodec") as "av1";
+    trackPublishOptions.backupCodec = { codec: game.settings?.get(MODULE_NAME, "backupCodec") as "vp8" };
   }
 
-  setMusicModeAudioOptions(audioCaptureOptions: AudioCaptureOptions): void {
-    audioCaptureOptions.autoGainControl = false;
-    audioCaptureOptions.echoCancellation = false;
-    audioCaptureOptions.noiseSuppression = false;
-    audioCaptureOptions.voiceIsolation = false;
-    audioCaptureOptions.channelCount = { ideal: 2 };
+  applyAdvancedAudioOptions(audioCaptureOptions: AudioCaptureOptions): void {
+    audioCaptureOptions.autoGainControl = game.settings?.get(MODULE_NAME, "autoGainControl");
+    audioCaptureOptions.echoCancellation = game.settings?.get(MODULE_NAME, "echoCancellation");
+    audioCaptureOptions.noiseSuppression = game.settings?.get(MODULE_NAME, "noiseSuppression");
+    audioCaptureOptions.voiceIsolation = game.settings?.get(MODULE_NAME, "voiceIsolation");
   }
 }
