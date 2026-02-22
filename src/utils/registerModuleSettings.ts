@@ -193,11 +193,11 @@ export default function registerModuleSettings(): void {
     scope: "client",
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     config: game.settings.get(MODULE_NAME, "advancedAudioMode") ?? false,
-    default: "av1",
+    default: "vp9",
     type: new foundry.data.fields.StringField({
       required: true,
       blank: false,
-      initial: "av1",
+      initial: "vp9",
       choices: {
         vp8: "VP8",
         h264: "H.264",

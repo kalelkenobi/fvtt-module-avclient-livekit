@@ -103,7 +103,7 @@ declare global {
       initial: true;
     }>;
     "avclient-livekit.videoCodec": foundry.data.fields.StringField<{
-      initial: "av1";
+      initial: "vp9";
     }>;
     "avclient-livekit.backupCodec": foundry.data.fields.StringField<{
       initial: "vp8";

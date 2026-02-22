@@ -1359,7 +1359,7 @@ export default class LiveKitClient {
       audioPreset: AudioPresets.musicHighQualityStereo,
       forceStereo: true,
       simulcast: true,
-      videoCodec: "av1",
+      videoCodec: "vp9",
       backupCodec: { codec: "vp8" },
       videoSimulcastLayers: [VideoPresets43.h720, VideoPresets43.h1440],
     };
@@ -1376,7 +1376,7 @@ export default class LiveKitClient {
     trackPublishOptions.audioPreset = { maxBitrate: (game.settings?.get(MODULE_NAME, "audioBitRate") ?? 128) * 1000 };
     trackPublishOptions.dtx = game.settings?.get(MODULE_NAME, "dtx");
     trackPublishOptions.red = game.settings?.get(MODULE_NAME, "red");
-    trackPublishOptions.videoCodec = game.settings?.get(MODULE_NAME, "videoCodec") as "av1";
+    trackPublishOptions.videoCodec = game.settings?.get(MODULE_NAME, "videoCodec") as "vp9";
     trackPublishOptions.backupCodec = { codec: game.settings?.get(MODULE_NAME, "backupCodec") as "vp8" };
   }
 
