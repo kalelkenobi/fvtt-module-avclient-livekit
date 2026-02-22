@@ -47,9 +47,9 @@ export default function registerModuleSettings(): void {
     requiresReload: false,
   });
 
-  game.settings?.register(MODULE_NAME, "advancedAudioMode", {
-    name: "LIVEKITAVCLIENT.advancedAudioMode",
-    hint: "LIVEKITAVCLIENT.advancedAudioModeHint",
+  game.settings?.register(MODULE_NAME, "advancedSettingsMode", {
+    name: "LIVEKITAVCLIENT.advancedSettingsMode",
+    hint: "LIVEKITAVCLIENT.advancedSettingsModeHint",
     scope: "client",
     config: true,
     default: false,
@@ -73,7 +73,7 @@ export default function registerModuleSettings(): void {
     hint: "LIVEKITAVCLIENT.autoGainControlHint",
     scope: "client",
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    config: game.settings.get(MODULE_NAME, "advancedAudioMode") ?? false,
+    config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
     onChange: () => {
@@ -90,7 +90,7 @@ export default function registerModuleSettings(): void {
     hint: "LIVEKITAVCLIENT.echoCancellationHint",
     scope: "client",
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    config: game.settings.get(MODULE_NAME, "advancedAudioMode") ?? false,
+    config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
     onChange: () => {
@@ -107,7 +107,7 @@ export default function registerModuleSettings(): void {
     hint: "LIVEKITAVCLIENT.noiseSuppressionHint",
     scope: "client",
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    config: game.settings.get(MODULE_NAME, "advancedAudioMode") ?? false,
+    config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
     onChange: () => {
@@ -124,7 +124,7 @@ export default function registerModuleSettings(): void {
     hint: "LIVEKITAVCLIENT.voiceIsolationHint",
     scope: "client",
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    config: game.settings.get(MODULE_NAME, "advancedAudioMode") ?? false,
+    config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
     onChange: () => {
@@ -145,7 +145,7 @@ export default function registerModuleSettings(): void {
     hint: "LIVEKITAVCLIENT.audioBitRateHint",
     scope: "client",
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    config: game.settings.get(MODULE_NAME, "advancedAudioMode") ?? false,
+    config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
     default: 128,
     type: new foundry.data.fields.NumberField({
       initial: 128,
@@ -168,7 +168,7 @@ export default function registerModuleSettings(): void {
     hint: "LIVEKITAVCLIENT.dtxHint",
     scope: "client",
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    config: game.settings.get(MODULE_NAME, "advancedAudioMode") ?? false,
+    config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
     onChange: () => {
@@ -185,7 +185,7 @@ export default function registerModuleSettings(): void {
     hint: "LIVEKITAVCLIENT.redHint",
     scope: "client",
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    config: game.settings.get(MODULE_NAME, "advancedAudioMode") ?? false,
+    config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
     onChange: () => {
@@ -202,7 +202,7 @@ export default function registerModuleSettings(): void {
     hint: "LIVEKITAVCLIENT.videoCodecHint",
     scope: "client",
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    config: game.settings.get(MODULE_NAME, "advancedAudioMode") ?? false,
+    config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
     default: "vp9",
     type: new foundry.data.fields.StringField({
       required: true,
@@ -224,7 +224,7 @@ export default function registerModuleSettings(): void {
     hint: "LIVEKITAVCLIENT.backupCodecHint",
     scope: "client",
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    config: game.settings.get(MODULE_NAME, "advancedAudioMode") ?? false,
+    config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
     default: "vp8",
     type: new foundry.data.fields.StringField({
       required: true,

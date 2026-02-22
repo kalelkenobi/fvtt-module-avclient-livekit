@@ -405,7 +405,7 @@ export default class LiveKitClient {
     };
 
     // Apply advanced audio input options if enabled
-    if (game.settings?.get(MODULE_NAME, "advancedAudioMode")) {
+    if (game.settings?.get(MODULE_NAME, "advancedSettingsMode")) {
       this.applyAdvancedAudioOptions(audioCaptureOptions);
     }
 
@@ -1365,7 +1365,7 @@ export default class LiveKitClient {
     };
 
     // Apply advanced track publish options if enabled
-    if (game.settings?.get(MODULE_NAME, "advancedAudioMode")) {
+    if (game.settings?.get(MODULE_NAME, "advancedSettingsMode")) {
       this.applyAdvancedTrackOptions(trackPublishOptions);
     }
 

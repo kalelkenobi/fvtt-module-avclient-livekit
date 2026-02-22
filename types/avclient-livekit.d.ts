@@ -74,7 +74,7 @@ declare global {
     "avclient-livekit.displayConnectionQuality": foundry.data.fields.BooleanField<{
       initial: true;
     }>;
-    "avclient-livekit.advancedAudioMode": foundry.data.fields.BooleanField<{
+    "avclient-livekit.advancedSettingsMode": foundry.data.fields.BooleanField<{
       initial: false;
     }>;
     "avclient-livekit.autoGainControl": foundry.data.fields.BooleanField<{

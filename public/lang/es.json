@@ -1,7 +1,6 @@
 {
   "I18N.LANGUAGE": "Español",
   "I18N.MAINTAINERS": "@Viriato139ac#0342",
-
   "LIVEKITAVCLIENT.connect": "Conectar",
   "LIVEKITAVCLIENT.connectError": "Error al conectar al Servidor LiveKit",
   "LIVEKITAVCLIENT.connectErrorCheckClock": "No se ha podido crear un token seguro. Por favor, asegúrese de que la fecha y la hora de su sistema son correctas",
@@ -10,8 +9,8 @@
   "LIVEKITAVCLIENT.connectionQuality.good": "Calidad de conexión buena",
   "LIVEKITAVCLIENT.connectionQuality.poor": "Calidad de conexión pobre",
   "LIVEKITAVCLIENT.connectionQuality.unknown": "Calidad de conexión desconocida",
-  "LIVEKITAVCLIENT.advancedAudioMode": "Modo de audio avanzado",
-  "LIVEKITAVCLIENT.advancedAudioModeHint": "Habilita opciones avanzadas de configuración de audio. Cuando esté habilitado, se mostrarán abajo opciones adicionales.",
+  "LIVEKITAVCLIENT.advancedSettingsMode": "Modo avanzado",
+  "LIVEKITAVCLIENT.advancedSettingsModeHint": "Habilita opciones avanzadas de configuración. Cuando esté habilitado, se mostrarán abajo opciones adicionales.",
   "LIVEKITAVCLIENT.autoGainControl": "Control automático de ganancia",
   "LIVEKITAVCLIENT.autoGainControlHint": "Ajusta automáticamente el volumen de entrada del micrófono. Deshabilítalo para streaming de música o cuando prefieras control manual del volumen.",
   "LIVEKITAVCLIENT.echoCancellation": "Cancelación de eco",
