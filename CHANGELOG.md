@@ -1,5 +1,11 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.6.5.5k
+
+- Add support for selecting and mixing a secondary microphone input
+- Dynamically populate secondary audio source choices in the AVConfig
+- Simplify disabled audio source option assignment and adjust padding for the LiveKit config tab
+
 ## 0.6.5.4k
 
 - Directly assign deviceId and channelCount in audio and video capture options
