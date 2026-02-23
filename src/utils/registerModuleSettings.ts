@@ -5,6 +5,20 @@ import debug from "debug";
 const log = new Logger();
 
 export default function registerModuleSettings(): void {
+  game.settings?.register(MODULE_NAME, "secondaryAudioSrc", {
+    name: "LIVEKITAVCLIENT.secondaryAudioSrc",
+    hint: "LIVEKITAVCLIENT.secondaryAudioSrcHint",
+    scope: "client",
+    config: true,
+    default: "disabled",
+    type: new foundry.data.fields.StringField({
+      required: true,
+      blank: false,
+      initial: "disabled",
+    }),
+    requiresReload: true,
+  });
+  
   game.settings?.register(MODULE_NAME, "displayConnectionQuality", {
     name: "LIVEKITAVCLIENT.displayConnectionQuality",
     hint: "LIVEKITAVCLIENT.displayConnectionQualityHint",

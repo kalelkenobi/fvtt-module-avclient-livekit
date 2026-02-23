@@ -55,6 +55,9 @@ export default class LiveKitClient {
 
   audioBroadcastEnabled = false;
   audioTrack: LocalAudioTrack | null = null;
+  secondaryAudioTrack: LocalAudioTrack | null = null;
+  audioContext: AudioContext | null = null;
+  mixedMediaStream: MediaStream | null = null;
   breakoutRoom: string | undefined;
   connectionState: ConnectionState = ConnectionState.Disconnected;
   initState: InitState = InitState.Uninitialized;
@@ -308,6 +311,7 @@ export default class LiveKitClient {
       await this.liveKitRoom?.localParticipant.unpublishTrack(this.audioTrack);
       this.audioTrack.stop();
       this.audioTrack = null;
+      this.cleanupMixer();
       game.user?.broadcastActivity({ av: { muted: true } });
     }
 
@@ -322,6 +326,7 @@ export default class LiveKitClient {
         );
         this.audioTrack.stop();
         this.audioTrack = null;
+        this.cleanupMixer();
         game.user?.broadcastActivity({ av: { muted: true } });
       } else {
         await this.initializeAudioTrack();
@@ -336,7 +341,7 @@ export default class LiveKitClient {
         }
       }
     } else {
-      const audioParams = this.getAudioParams();
+      const audioParams = this.getAudioParams(this.settings.get("client", "audioSrc") as string);
       if (audioParams) {
         await this.audioTrack.restartTrack(audioParams);
       }
@@ -383,9 +388,8 @@ export default class LiveKitClient {
     }
   }
 
-  getAudioParams(): AudioCaptureOptions | false {
+  getAudioParams(audioSrc: string): AudioCaptureOptions | false {
     // Determine whether the user can send audio
-    const audioSrc = this.settings.get("client", "audioSrc");
     const canBroadcastAudio = this.avMaster.canUserBroadcastAudio(
       game.user?.id ?? "",
     );
@@ -410,6 +414,23 @@ export default class LiveKitClient {
     }
 
     return audioCaptureOptions;
+  }
+
+  /**
+   * Clean up the audio mixer resources (secondary track, AudioContext, mixed stream).
+   */
+  cleanupMixer(): void {
+    if (this.secondaryAudioTrack) {
+      this.secondaryAudioTrack.stop();
+      this.secondaryAudioTrack = null;
+    }
+    if (this.audioContext) {
+      this.audioContext.close().catch((error: unknown) => {
+        log.error("Error closing AudioContext:", error);
+      });
+      this.audioContext = null;
+    }
+    this.mixedMediaStream = null;
   }
 
   getParticipantFVTTUser(participant: Participant): User | undefined {
@@ -552,12 +573,103 @@ export default class LiveKitClient {
     await this.initializeVideoTrack();
   }
 
+  /**
+   * Create a mixed audio track from primary and secondary microphone inputs
+   */
+  async createMixedAudioTrack(primaryTrack: LocalAudioTrack): Promise<LocalAudioTrack | null> {
+    const secondaryAudioSrc = game.settings?.get(MODULE_NAME, "secondaryAudioSrc");
+
+    if (secondaryAudioSrc === "disabled") {
+      return null;
+    }
+
+    const audioParams = this.getAudioParams(secondaryAudioSrc as string);
+
+    if (!audioParams) {
+      return null;
+    }
+
+    try {
+      // Create the secondary audio track
+      this.secondaryAudioTrack = await createLocalAudioTrack(audioParams);
+    } catch (error: unknown) {
+      let message = error;
+      if (error instanceof Error) {
+        message = error.message;
+      }
+      log.error("Unable to acquire secondary audio:", message);
+      return null;
+    }
+
+    // Get the raw MediaStreamTracks from both LiveKit tracks
+    const primaryMediaTrack = primaryTrack.mediaStreamTrack;
+    const secondaryMediaTrack = this.secondaryAudioTrack.mediaStreamTrack;
+
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (!primaryMediaTrack || !secondaryMediaTrack) {
+      log.error("Could not get MediaStreamTracks for mixing");
+      this.secondaryAudioTrack.stop();
+      this.secondaryAudioTrack = null;
+      return null;
+    }
+
+    try {
+      // Create the AudioContext at 48kHz for high-quality mixing
+      this.audioContext = new AudioContext({ sampleRate: 48000 });
+
+      const primarySource = this.audioContext.createMediaStreamSource(
+        new MediaStream([primaryMediaTrack]),
+      );
+      const secondarySource = this.audioContext.createMediaStreamSource(
+        new MediaStream([secondaryMediaTrack]),
+      );
+
+      // Use gain nodes to prevent clipping when summing two sources
+      const primaryGain = this.audioContext.createGain();
+      primaryGain.gain.value = 1.0;
+      const secondaryGain = this.audioContext.createGain();
+      secondaryGain.gain.value = 1.0;
+
+      const destination = this.audioContext.createMediaStreamDestination();
+      destination.channelCount = 2;
+      destination.channelCountMode = "explicit";
+
+      primarySource.connect(primaryGain).connect(destination);
+      secondarySource.connect(secondaryGain).connect(destination);
+
+      this.mixedMediaStream = destination.stream;
+
+      // Create a new LocalAudioTrack from the mixed stream
+      const mixedMediaTrack = this.mixedMediaStream.getAudioTracks()[0];
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+      if (!mixedMediaTrack) {
+        log.error("Mixed MediaStream has no audio tracks");
+        this.cleanupMixer();
+        return null;
+      }
+
+      const mixedTrack = new LocalAudioTrack(mixedMediaTrack);
+
+      log.debug("Created mixed audio track from two microphone inputs");
+      return mixedTrack;
+    } catch (error: unknown) {
+      let message = error;
+      if (error instanceof Error) {
+        message = error.message;
+      }
+      log.error("Error creating mixed audio track:", message);
+      this.cleanupMixer();
+      return null;
+    }
+  }  
+
   async initializeAudioTrack(): Promise<void> {
     // Make sure the track is initially unset
     this.audioTrack = null;
+    this.cleanupMixer();
 
     // Get audio parameters
-    const audioParams = this.getAudioParams();
+    const audioParams = this.getAudioParams(this.settings.get("client", "audioSrc") as string);
 
     // Get the track if requested
     if (audioParams) {
@@ -569,6 +681,22 @@ export default class LiveKitClient {
           message = error.message;
         }
         log.error("Unable to acquire local audio:", message);
+      }
+    }
+
+    // Attempt to create a mixed track with the secondary microphone
+    if (this.audioTrack) {
+      try {
+        const mixedTrack = await this.createMixedAudioTrack(this.audioTrack);
+        if (mixedTrack) {
+          this.audioTrack = mixedTrack;
+        }
+      } catch (error: unknown) {
+        let message = error;
+        if (error instanceof Error) {
+          message = error.message;
+        }
+        log.error("Unable to create mixed track:", message);
       }
     }
 

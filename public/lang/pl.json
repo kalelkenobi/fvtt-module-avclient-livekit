@@ -27,6 +27,8 @@
   "LIVEKITAVCLIENT.videoCodecHint": "Kodek wideo używany do publikowania ścieżek wideo.",
   "LIVEKITAVCLIENT.backupCodec": "Zapasowy kodek wideo",
   "LIVEKITAVCLIENT.backupCodecHint": "Zapasowy kodek używany, gdy podstawowy kodek wideo nie jest obsługiwany przez przeglądarkę subskrybenta.",
+  "LIVEKITAVCLIENT.secondaryAudioSrc": "Drugi mikrofon",
+  "LIVEKITAVCLIENT.secondaryAudioSrcHint": "Wybierz drugi mikrofon do zmiksowania z głównym mikrofonem. Obie źródła zostaną połączone i opublikowane jako jedna ścieżka audio.",
   "LIVEKITAVCLIENT.debug": "Włącz rejestrowanie debugowania",
   "LIVEKITAVCLIENT.debugHint": "Włącza CONFIG.debug.av i CONFIG.debug.avclient w celu uzyskania dodatkowych informacji w dzienniku.",
   "LIVEKITAVCLIENT.disableReceivingAudio": "Wyłącz odbieranie dźwięku",

@@ -71,6 +71,11 @@ declare global {
   interface SettingConfig {
     "avclient-livekit.liveKitConnectionSettings": LiveKitConnectionSettings;
     "avclient-livekit.breakoutRoomRegistry": BreakoutRoomRegistry;
+    "avclient-livekit.secondaryAudioSrc": foundry.data.fields.StringField<{
+      required: true;
+      blank: false;
+      initial: "disabled";
+    }>;
     "avclient-livekit.displayConnectionQuality": foundry.data.fields.BooleanField<{
       initial: true;
     }>;
