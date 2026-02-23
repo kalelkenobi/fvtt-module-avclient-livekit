@@ -1,5 +1,11 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.6.5.4k
+
+- Directly assign deviceId and channelCount in audio and video capture options
+- Rename advanced audio mode setting to advanced settings mode and update related UI text and logic
+- Add autocomplete attribute to the Patreon token input field
+
 ## 0.6.5.3k
 
 - Replace audio music mode with advanced audio settings including granular controls, audio bitrate, and video codec options
