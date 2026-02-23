@@ -149,8 +149,7 @@ export default class LiveKitAVConfig
 
           if (setting.key === "secondaryAudioSrc") {
             const audioSources = (await game.webrtc?.client.getAudioSources()) ?? {};
-            audioSources.disabled = game.i18n?.localize("WEBRTC.DisableAudio") ?? "disabled";
-            // Set choices type correctly before assignment
+            audioSources.disabled = "disabled";
             // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
             (data.field as any).choices = audioSources;
           }

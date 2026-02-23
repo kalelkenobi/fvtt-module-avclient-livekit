@@ -86,6 +86,7 @@
 #av-config .tab[data-tab="livekit"] {
   max-height: 40vh;
   overflow-y: auto;
+  padding-right: 2.2%;
 }
 
 /* Allow resizing the camera dock */
