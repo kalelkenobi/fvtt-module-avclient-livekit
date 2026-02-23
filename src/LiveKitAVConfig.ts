@@ -16,7 +16,7 @@ interface PatreonLoginEvent extends MessageEvent {
 
 export default class LiveKitAVConfig
   extends foundry.applications.settings.menus.AVConfig
-{
+  {
   /** @override */
   static DEFAULT_OPTIONS = {
     tag: "form",
@@ -147,6 +147,14 @@ export default class LiveKitAVConfig
           data.field.label ||= game.i18n?.localize(setting.name ?? "") ?? "";
           data.field.hint ||= game.i18n?.localize(setting.hint ?? "") ?? "";
 
+          if (setting.key === "secondaryAudioSrc") {
+            const audioSources = (await game.webrtc?.client.getAudioSources()) ?? {};
+            audioSources.disabled = game.i18n?.localize("WEBRTC.DisableAudio") ?? "disabled";
+            // Set choices type correctly before assignment
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+            (data.field as any).choices = audioSources;
+          }
+
           liveKitSettings.push(data);
         }
 
@@ -246,7 +254,7 @@ export default class LiveKitAVConfig
           "hidden",
           // This can only be unhidden if the existing server type was also tavern, to avoid the patreon token being set before the server type is set
           event.currentTarget.value !== "tavern" ||
-            liveKitConnectionSettings?.serverType !== "tavern",
+          liveKitConnectionSettings?.serverType !== "tavern",
         );
       });
 

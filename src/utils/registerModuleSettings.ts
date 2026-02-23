@@ -15,10 +15,13 @@ export default function registerModuleSettings(): void {
       required: true,
       blank: false,
       initial: "disabled",
+      choices: {
+        disabled: "disabled",
+      },
     }),
     requiresReload: true,
   });
-  
+
   game.settings?.register(MODULE_NAME, "displayConnectionQuality", {
     name: "LIVEKITAVCLIENT.displayConnectionQuality",
     hint: "LIVEKITAVCLIENT.displayConnectionQualityHint",
