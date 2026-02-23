@@ -579,11 +579,7 @@ export default class LiveKitClient {
   async createMixedAudioTrack(primaryTrack: LocalAudioTrack): Promise<LocalAudioTrack | null> {
     const secondaryAudioSrc = game.settings?.get(MODULE_NAME, "secondaryAudioSrc");
 
-    if (secondaryAudioSrc === "disabled") {
-      return null;
-    }
-
-    const audioParams = this.getAudioParams(secondaryAudioSrc as string);
+    const audioParams = this.getAudioParams(secondaryAudioSrc ?? "disabled");
 
     if (!audioParams) {
       return null;
