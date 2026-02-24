@@ -76,6 +76,11 @@ declare global {
       blank: false;
       initial: "disabled";
     }>;
+    "avclient-livekit.advancedSettingsTargetSource": foundry.data.fields.StringField<{
+      required: true;
+      blank: false;
+      initial: "both";
+    }>;
     "avclient-livekit.displayConnectionQuality": foundry.data.fields.BooleanField<{
       initial: true;
     }>;

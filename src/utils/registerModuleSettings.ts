@@ -84,7 +84,33 @@ export default function registerModuleSettings(): void {
     requiresReload: true,
   });
 
-  // Advanced Mode: Primary Input Source Options
+  game.settings?.register(MODULE_NAME, "advancedSettingsTargetSource", {
+    name: "LIVEKITAVCLIENT.advancedSettingsTargetSource",
+    hint: "LIVEKITAVCLIENT.advancedSettingsTargetSourceHint",
+    scope: "client",
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
+    default: "both",
+    type: new foundry.data.fields.StringField({
+      required: true,
+      blank: false,
+      initial: "both",
+      choices: {
+        both: "both",
+        primary: "primary",
+        secondary: "secondary",
+      },
+    }),
+    onChange: () => {
+      game.webrtc?.client._liveKitClient
+        .changeAudioSource(true)
+        .catch((error: unknown) => {
+          log.error("advancedSettingsTargetSource: Error changing target capture source", error);
+        });
+    },
+  });
+
+  // Advanced Mode: Audio Options
   game.settings?.register(MODULE_NAME, "autoGainControl", {
     name: "LIVEKITAVCLIENT.autoGainControl",
     hint: "LIVEKITAVCLIENT.autoGainControlHint",
@@ -97,7 +123,7 @@ export default function registerModuleSettings(): void {
       game.webrtc?.client._liveKitClient
         .changeAudioSource(true)
         .catch((error: unknown) => {
-          log.error("autoGainControl: Error changing audio source", error);
+          log.error("autoGainControl: Error changing audio option", error);
         });
     },
   });
@@ -114,7 +140,7 @@ export default function registerModuleSettings(): void {
       game.webrtc?.client._liveKitClient
         .changeAudioSource(true)
         .catch((error: unknown) => {
-          log.error("echoCancellation: Error changing audio source", error);
+          log.error("echoCancellation: Error changing audio option", error);
         });
     },
   });
@@ -131,7 +157,7 @@ export default function registerModuleSettings(): void {
       game.webrtc?.client._liveKitClient
         .changeAudioSource(true)
         .catch((error: unknown) => {
-          log.error("noiseSuppression: Error changing audio source", error);
+          log.error("noiseSuppression: Error changing audio option", error);
         });
     },
   });
@@ -148,7 +174,7 @@ export default function registerModuleSettings(): void {
       game.webrtc?.client._liveKitClient
         .changeAudioSource(true)
         .catch((error: unknown) => {
-          log.error("voiceIsolation: Error changing audio source", error);
+          log.error("voiceIsolation: Error changing audio option", error);
         });
     },
   });
@@ -156,7 +182,6 @@ export default function registerModuleSettings(): void {
   //
   // Advanced Mode: Track Options
   //
-
   game.settings?.register(MODULE_NAME, "audioBitRate", {
     name: "LIVEKITAVCLIENT.audioBitRate",
     hint: "LIVEKITAVCLIENT.audioBitRateHint",
@@ -175,7 +200,7 @@ export default function registerModuleSettings(): void {
       game.webrtc?.client._liveKitClient
         .changeAudioSource(true)
         .catch((error: unknown) => {
-          log.error("audioBitRate: Error changing audio source", error);
+          log.error("audioBitRate: Error changing track bitrate", error);
         });
     },
   });
@@ -192,7 +217,7 @@ export default function registerModuleSettings(): void {
       game.webrtc?.client._liveKitClient
         .changeAudioSource(true)
         .catch((error: unknown) => {
-          log.error("dtx: Error changing audio source", error);
+          log.error("dtx: Error changing DTX for track", error);
         });
     },
   });
@@ -209,7 +234,7 @@ export default function registerModuleSettings(): void {
       game.webrtc?.client._liveKitClient
         .changeAudioSource(true)
         .catch((error: unknown) => {
-          log.error("red: Error changing audio source", error);
+          log.error("red: Error changing RED for track", error);
         });
     },
   });

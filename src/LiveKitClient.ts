@@ -55,6 +55,7 @@ export default class LiveKitClient {
 
   audioBroadcastEnabled = false;
   audioTrack: LocalAudioTrack | null = null;
+  primaryAudioTrack: LocalAudioTrack | null = null;
   secondaryAudioTrack: LocalAudioTrack | null = null;
   audioContext: AudioContext | null = null;
   mixedMediaStream: MediaStream | null = null;
@@ -341,6 +342,14 @@ export default class LiveKitClient {
         }
       }
     } else {
+      const secondaryAudioSrc = game.settings?.get(MODULE_NAME, "secondaryAudioSrc");
+      if (this.mixedMediaStream || (secondaryAudioSrc && secondaryAudioSrc !== "disabled")) {
+        // If we are currently using a mixed track, or switching to one, we cannot simply restart
+        // the track. Instead, perform a full re-initialization.
+        await this.changeAudioSource(true);
+        return;
+      }
+
       const audioParams = this.getAudioParams(this.settings.get("client", "audioSrc") as string);
       if (audioParams) {
         await this.audioTrack.restartTrack(audioParams);
@@ -388,7 +397,7 @@ export default class LiveKitClient {
     }
   }
 
-  getAudioParams(audioSrc: string): AudioCaptureOptions | false {
+  getAudioParams(audioSrc: string, isSecondary = false): AudioCaptureOptions | false {
     // Determine whether the user can send audio
     const canBroadcastAudio = this.avMaster.canUserBroadcastAudio(
       game.user?.id ?? "",
@@ -410,7 +419,15 @@ export default class LiveKitClient {
 
     // Apply advanced audio input options if enabled
     if (game.settings?.get(MODULE_NAME, "advancedSettingsMode")) {
-      this.applyAdvancedAudioOptions(audioCaptureOptions);
+      const targetSource = game.settings.get(MODULE_NAME, "advancedSettingsTargetSource");
+
+      if (
+        targetSource === "both" ||
+        (targetSource === "secondary" && isSecondary) ||
+        (targetSource === "primary" && !isSecondary)
+      ) {
+        this.applyAdvancedAudioOptions(audioCaptureOptions);
+      }
     }
 
     return audioCaptureOptions;
@@ -420,6 +437,10 @@ export default class LiveKitClient {
    * Clean up the audio mixer resources (secondary track, AudioContext, mixed stream).
    */
   cleanupMixer(): void {
+    if (this.primaryAudioTrack) {
+      this.primaryAudioTrack.stop();
+      this.primaryAudioTrack = null;
+    }
     if (this.secondaryAudioTrack) {
       this.secondaryAudioTrack.stop();
       this.secondaryAudioTrack = null;
@@ -579,7 +600,7 @@ export default class LiveKitClient {
   async createMixedAudioTrack(primaryTrack: LocalAudioTrack): Promise<LocalAudioTrack | null> {
     const secondaryAudioSrc = game.settings?.get(MODULE_NAME, "secondaryAudioSrc");
 
-    const audioParams = this.getAudioParams(secondaryAudioSrc ?? "disabled");
+    const audioParams = this.getAudioParams(secondaryAudioSrc ?? "disabled", true);
 
     if (!audioParams) {
       return null;
@@ -657,7 +678,7 @@ export default class LiveKitClient {
       this.cleanupMixer();
       return null;
     }
-  }  
+  }
 
   async initializeAudioTrack(): Promise<void> {
     // Make sure the track is initially unset
@@ -685,6 +706,7 @@ export default class LiveKitClient {
       try {
         const mixedTrack = await this.createMixedAudioTrack(this.audioTrack);
         if (mixedTrack) {
+          this.primaryAudioTrack = this.audioTrack;
           this.audioTrack = mixedTrack;
         }
       } catch (error: unknown) {
