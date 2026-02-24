@@ -1,5 +1,9 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.6.5.6k
+
+- Add option to selectively apply advanced audio settings to primary or secondary audio sources and refine audio track management
+
 ## 0.6.5.5k
 
 - Add support for selecting and mixing a secondary microphone input
