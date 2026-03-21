@@ -15,9 +15,6 @@ export default function registerModuleSettings(): void {
       required: true,
       blank: false,
       initial: "disabled",
-      choices: {
-        disabled: "disabled",
-      },
     }),
     requiresReload: true,
   });
