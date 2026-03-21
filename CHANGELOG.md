@@ -1,5 +1,9 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.6.5.9k
+
+- chore: Shorten "Auto-connect to LiveKit server" label to "Auto-connect" across all supported languages
+
 ## 0.6.5.8k
 
 - Add auto-connect setting to control automatic connection to the LiveKit server on startup
