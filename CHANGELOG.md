@@ -1,5 +1,9 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.6.5.8k
+
+- Add auto-connect setting to control automatic connection to the LiveKit server on startup
+
 ## 0.6.5.7k
 
 - Dynamically update audio and video sources via `onChange` handlers for settings, replacing `requiresReload`
