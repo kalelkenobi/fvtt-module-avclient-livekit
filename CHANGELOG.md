@@ -1,5 +1,9 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.6.5.10k
+
+- refactor: Remove Patreon/Tavern.at and third-party integration. Update project metadata for module fork.
+
 ## 0.6.5.9k
 
 - chore: Shorten "Auto-connect to LiveKit server" label to "Auto-connect" across all supported languages
