@@ -1,5 +1,12 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.6.5.11k
+
+- refactor: extract track and UI management from `LiveKitClient` into dedicated `LiveKitTrackManager` and `LiveKitUIManager` classes, and add new documentation
+- chore: Migrate ESLint integration from `vite-plugin-checker` to `vite-plugin-eslint2` and update related configurations
+- chore: Update `@eslint/js`, `eslint`, and `vite` development dependencies to their latest major versions
+- chore: Update dependencies, remove unused methods and types, and refactor logger initialization
+
 ## 0.6.5.10k
 
 - refactor: Remove Patreon/Tavern.at and third-party integration. Update project metadata for module fork.
