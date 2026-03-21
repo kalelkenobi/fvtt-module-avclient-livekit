@@ -1,5 +1,10 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.6.5.7k
+
+- Dynamically update audio and video sources via `onChange` handlers for settings, replacing `requiresReload`
+- Fix secondaryAudioSrc setting being reset to 'disable' with every Foundry reload
+
 ## 0.6.5.6k
 
 - Add option to selectively apply advanced audio settings to primary or secondary audio sources and refine audio track management
