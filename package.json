@@ -39,6 +39,7 @@
     "typescript-eslint": "8.57.1",
     "vite": "^8.0.1",
     "vite-plugin-checker": "0.12.0",
+    "vite-plugin-eslint2": "^5.0.5",
     "vite-plugin-static-copy": "^3.3.0"
   }
 }

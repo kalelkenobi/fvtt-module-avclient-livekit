@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import basicSsl from "@vitejs/plugin-basic-ssl";
 import checker from "vite-plugin-checker";
+import eslintPlugin from "vite-plugin-eslint2";
 import fs from "fs/promises";
 import path from "path";
 import { resolve } from "path";
@@ -19,11 +20,8 @@ export default defineConfig({
   },
   plugins: [
     basicSsl(),
+    eslintPlugin(),
     checker({
-      eslint: {
-        lintCommand: "eslint",
-        useFlatConfig: true,
-      },
       typescript: true,
     }),
     viteStaticCopy({
