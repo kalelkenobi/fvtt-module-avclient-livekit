@@ -2,7 +2,6 @@ dist/
 node_modules/
 *.log
 .DS_Store
-docs/
 .vscode/
 
 # Yarn 3 ignores
