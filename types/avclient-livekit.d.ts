@@ -112,7 +112,6 @@ declare global {
     "avclient-livekit.devMode": foundry.data.fields.BooleanField<{
       initial: false;
     }>;
-
     "avclient-livekit.liveKitTrace": foundry.data.fields.BooleanField<{
       initial: false;
     }>;
