@@ -55,12 +55,14 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
   _liveKitClient: LiveKitClient;
   room: string | null;
   tempError: unknown;
+  initialConnectAttempted: boolean;
 
   constructor(master: foundry.av.AVMaster, settings: foundry.av.AVSettings) {
     super(master, settings);
 
     this._liveKitClient = new LiveKitClient(this);
     this.room = null;
+    this.initialConnectAttempted = false;
     this.master.config = new LiveKitAVConfig({ webrtc: master });
   }
 
@@ -121,6 +123,17 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
    */
   async connect(): Promise<boolean> {
     log.debug("LiveKitAVClient connect");
+
+    if (!this.initialConnectAttempted) {
+      const autoConnect = game.settings?.get(MODULE_NAME, "autoConnect");
+      this.initialConnectAttempted = true;
+      if (!autoConnect) {
+        log.info("Auto-connect is disabled. Skipping initial connection.");
+        this._liveKitClient.connectionState = ConnectionState.Disconnected;
+        return false;
+      }
+    }
+
     this._liveKitClient.connectionState = ConnectionState.Connecting;
 
     let liveKitConnectionSettings = game.settings?.get(

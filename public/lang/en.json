@@ -40,6 +40,8 @@
   "LIVEKITAVCLIENT.disableReceivingVideoHint": "Don't subscribe to other users' video tracks. May be helpful if your bandwidth or CPU is limited",
   "LIVEKITAVCLIENT.disableReceivingVideoWarning": "Receiving video is disabled in LiveKit AVClient Module Settings",
   "LIVEKITAVCLIENT.disconnect": "Disconnect",
+  "LIVEKITAVCLIENT.autoConnect": "Auto-connect to LiveKit server",
+  "LIVEKITAVCLIENT.autoConnectHint": "Automatically connect to the LiveKit server upon logging into Foundry VTT",
   "LIVEKITAVCLIENT.displayConnectionQuality": "Connection quality indicator",
   "LIVEKITAVCLIENT.displayConnectionQualityHint": "Display a connection quality indicator beside each player's name to show the quality of their connection to the LiveKit server",
   "LIVEKITAVCLIENT.indicatorMuted": "Audio Muted",

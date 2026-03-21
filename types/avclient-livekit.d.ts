@@ -81,6 +81,9 @@ declare global {
       blank: false;
       initial: "both";
     }>;
+    "avclient-livekit.autoConnect": foundry.data.fields.BooleanField<{
+      initial: true;
+    }>;
     "avclient-livekit.displayConnectionQuality": foundry.data.fields.BooleanField<{
       initial: true;
     }>;

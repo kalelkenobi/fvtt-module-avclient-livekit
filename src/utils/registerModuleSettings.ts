@@ -25,6 +25,15 @@ export default function registerModuleSettings(): void {
     },
   });
 
+  game.settings?.register(MODULE_NAME, "autoConnect", {
+    name: "LIVEKITAVCLIENT.autoConnect",
+    hint: "LIVEKITAVCLIENT.autoConnectHint",
+    scope: "client",
+    config: true,
+    default: true,
+    type: new foundry.data.fields.BooleanField({ initial: true }),
+  });
+
   game.settings?.register(MODULE_NAME, "displayConnectionQuality", {
     name: "LIVEKITAVCLIENT.displayConnectionQuality",
     hint: "LIVEKITAVCLIENT.displayConnectionQualityHint",
