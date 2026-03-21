@@ -131,14 +131,6 @@ export default class LiveKitAVConfig
     return partContext;
   }
 
-  /** @override */
-  async _onRender(
-    context: foundry.applications.api.ApplicationV2.RenderContextOf<this>,
-    options: DeepPartial<foundry.applications.api.HandlebarsApplicationMixin.RenderOptions>,
-  ) {
-    await super._onRender(context, options);
-  }
-
   /**
    * Update world and client settings.
    * @this {AVConfig}
@@ -259,17 +251,5 @@ export default class LiveKitAVConfig
         world: requiresWorldReload,
       });
     }
-  }
-
-  _setConfigSectionVisible(selector: string, enabled = true) {
-    const section = this.element.querySelector(selector);
-    if (section) {
-      if (enabled) {
-        section.classList.remove("hidden");
-      } else {
-        section.classList.add("hidden");
-      }
-    }
-    this.setPosition(this.position);
   }
 }

@@ -731,12 +731,6 @@ export default class LiveKitClient {
     this.setRoomCallbacks();
   }
 
-  isUserExternal(userId: string): boolean {
-    // TODO: Implement this when adding external user support
-    log.debug("isUserExternal not yet implemented; userId:", userId);
-    return false;
-  }
-
   onAudioPlaybackStatusChanged(canPlayback: boolean): void {
     if (!canPlayback) {
       log.warn("Cannot play audio/video, waiting for user interaction");

@@ -9,19 +9,13 @@ export class Logger {
   private readonly _error: debug.Debugger;
 
   constructor(prefix?: string) {
-    if (prefix) {
-      this._trace = debug(`${MODULE_NAME}:TRACE:${prefix}`);
-      this._debug = debug(`${MODULE_NAME}:DEBUG:${prefix}`);
-      this._info = debug(`${MODULE_NAME}:INFO:${prefix}`);
-      this._warn = debug(`${MODULE_NAME}:WARN:${prefix}`);
-      this._error = debug(`${MODULE_NAME}:ERROR:${prefix}`);
-    } else {
-      this._trace = debug(`${MODULE_NAME}:TRACE`);
-      this._debug = debug(`${MODULE_NAME}:DEBUG`);
-      this._info = debug(`${MODULE_NAME}:INFO`);
-      this._warn = debug(`${MODULE_NAME}:WARN`);
-      this._error = debug(`${MODULE_NAME}:ERROR`);
-    }
+    const base = prefix ? `${MODULE_NAME}:${prefix}` : MODULE_NAME;
+
+    this._trace = debug(`${base}:TRACE`);
+    this._debug = debug(`${base}:DEBUG`);
+    this._info = debug(`${base}:INFO`);
+    this._warn = debug(`${base}:WARN`);
+    this._error = debug(`${base}:ERROR`);
 
     /* eslint-disable no-console */
     this._trace.log = console.trace.bind(console);

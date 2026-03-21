@@ -11,7 +11,6 @@ interface LiveKitConnectionSettings {
   password?: string;
 }
 
-
 // Custom foundry socket message
 interface SocketMessage {
   action: "breakout" | "connect" | "disconnect" | "render";
