@@ -42,7 +42,7 @@
   "LIVEKITAVCLIENT.disableReceivingVideoHint": "No suscribirse a las pistas de vídeo del resto de usuarios. Puede ser útil si se tiene problemas con el ancho de banda o la capacidad de la CPU",
   "LIVEKITAVCLIENT.disableReceivingVideoWarning": "Se ha deshabilitado la recepción de vídeo en los ajustes del módulo LiveKit AVClient",
   "LIVEKITAVCLIENT.disconnect": "Desconectar",
-  "LIVEKITAVCLIENT.autoConnect": "Conexión automática al servidor LiveKit",
+  "LIVEKITAVCLIENT.autoConnect": "Conexión automática",
   "LIVEKITAVCLIENT.autoConnectHint": "Conectarse automáticamente al servidor LiveKit al iniciar sesión en Foundry.",
   "LIVEKITAVCLIENT.displayConnectionQuality": "Indicador de calidad de conexión",
   "LIVEKITAVCLIENT.displayConnectionQualityHint": "Añade un indicador de calidad de conexión junto al nombre del jugador para mostrar la calidad de sus conexiones al servidor LiveKit",
