@@ -16,7 +16,13 @@ export default function registerModuleSettings(): void {
       blank: false,
       initial: "disabled",
     }),
-    requiresReload: true,
+    onChange: () => {
+      game.webrtc?.client._liveKitClient
+        .changeAudioSource(true)
+        .catch((error: unknown) => {
+          log.error("secondaryAudioSrc: Error changing audio source", error);
+        });
+    },
   });
 
   game.settings?.register(MODULE_NAME, "displayConnectionQuality", {
@@ -255,7 +261,13 @@ export default function registerModuleSettings(): void {
         h265: "H.265",
       },
     }),
-    requiresReload: true,
+    onChange: () => {
+      game.webrtc?.client._liveKitClient
+        .changeVideoSource()
+        .catch((error: unknown) => {
+          log.error("videoCodec: Error changing video source", error);
+        });
+    },
   });
 
   game.settings?.register(MODULE_NAME, "backupCodec", {
@@ -274,7 +286,13 @@ export default function registerModuleSettings(): void {
         h264: "H.264",
       },
     }),
-    requiresReload: true,
+    onChange: () => {
+      game.webrtc?.client._liveKitClient
+        .changeVideoSource()
+        .catch((error: unknown) => {
+          log.error("backupCodec: Error changing video source", error);
+        });
+    },
   });
 
   game.settings?.register(MODULE_NAME, "resetRoom", {
