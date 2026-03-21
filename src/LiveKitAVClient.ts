@@ -14,6 +14,7 @@ import { callWhenReady, delayReload } from "./utils/helpers";
 import { LiveKitConnectionSettings } from "../types/avclient-livekit";
 import LiveKitAVConfig from "./LiveKitAVConfig";
 import { Logger } from "./utils/logger";
+import { getAccessToken } from "./utils/auth";
 import { DeepPartial } from "fvtt-types/utils";
 
 /**
@@ -23,10 +24,6 @@ declare module "fvtt-types/configuration" {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Hooks {
     interface HookConfig {
-      /**
-       * The LiveKit client is available, but not yet initialized.
-       */
-      liveKitClientAvailable: (client: LiveKitClient) => void;
       /**
        * The LiveKit client is available and initialized. It's ready for use.
        */
@@ -170,50 +167,6 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
     // If liveKitConnectionSettings still isn't set, set it to an empty object
     liveKitConnectionSettings ??= {};
 
-    if (liveKitConnectionSettings.serverType === undefined && game.user?.isGM) {
-      // Set the initial value to the default
-      log.warn(
-        "livekit serverType setting not found; defaulting to",
-        this._liveKitClient.defaultLiveKitServerType.key,
-      );
-      liveKitConnectionSettings.serverType =
-        this._liveKitClient.defaultLiveKitServerType.key;
-      callWhenReady(() => {
-        game.settings
-          .set(
-            MODULE_NAME,
-            "liveKitConnectionSettings",
-            liveKitConnectionSettings,
-          )
-          .catch((error: unknown) => {
-            log.error(
-              "Error setting livekit serverType setting to default",
-              error,
-            );
-          });
-      });
-    }
-
-    let liveKitServerType = this._liveKitClient.defaultLiveKitServerType;
-    if (
-      typeof liveKitConnectionSettings.serverType === "string" &&
-      this._liveKitClient.liveKitServerTypes[
-        liveKitConnectionSettings.serverType
-      ].tokenFunction instanceof Function
-    ) {
-      liveKitServerType =
-        this._liveKitClient.liveKitServerTypes[
-          liveKitConnectionSettings.serverType
-        ];
-    } else {
-      log.warn(
-        "liveKitServerType",
-        liveKitConnectionSettings.serverType,
-        "not found; defaulting to",
-        this._liveKitClient.defaultLiveKitServerType.key,
-      );
-    }
-
     // Fix the URL if a protocol has been specified
     if (liveKitConnectionSettings.url) {
       const uriRegExp = new RegExp("^([a-zA-Z\\d]+://)+(.*)$");
@@ -244,35 +197,13 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
     // Check for connection settings
     if (
       game.user?.isGM &&
-      ((liveKitServerType.urlRequired &&
-        (liveKitConnectionSettings.url === undefined ||
-          liveKitConnectionSettings.url === "")) ||
-        (liveKitServerType.usernameRequired &&
-          (liveKitConnectionSettings.username === undefined ||
-            liveKitConnectionSettings.username === "")) ||
-        (liveKitServerType.passwordRequired &&
-          (liveKitConnectionSettings.password === undefined ||
-            liveKitConnectionSettings.password === "")))
+      (!liveKitConnectionSettings.url ||
+        !liveKitConnectionSettings.username ||
+        !liveKitConnectionSettings.password)
     ) {
       log.error("LiveKit connection information missing");
       ui.notifications?.error(
         game.i18n.localize(`${LANG_NAME}.connectionInfoMissing`),
-        { permanent: true },
-      );
-      this._liveKitClient.connectionState = ConnectionState.Disconnected;
-      await this.master.config.render({ force: true });
-      return false;
-    }
-
-    // Check for Tavern account settings
-    if (
-      game.user?.isGM &&
-      liveKitServerType.key === "tavern" &&
-      game.settings.get(MODULE_NAME, "tavernPatreonToken") === ""
-    ) {
-      log.error("LiveKit Tavern connection information missing");
-      ui.notifications?.error(
-        game.i18n.localize(`${LANG_NAME}.tavernAccountMissing`),
         { permanent: true },
       );
       this._liveKitClient.connectionState = ConnectionState.Disconnected;
@@ -324,8 +255,7 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
       return false;
     }
 
-    const accessToken = await liveKitServerType
-      .tokenFunction(
+    const accessToken = await getAccessToken(
         liveKitConnectionSettings.username, // The LiveKit API Key
         liveKitConnectionSettings.password, // The LiveKit Secret Key
         this.room,
@@ -338,18 +268,14 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
           message = error.message;
         }
         log.error(
-          "An error occurred when calling tokenFunction for liveKitServerType:",
-          liveKitServerType,
+          "An error occurred when generating access token:",
           message,
         );
         return "";
       });
 
     if (!accessToken) {
-      log.error(
-        "Could not get access token",
-        liveKitServerType.label || liveKitServerType.key,
-      );
+      log.error("Could not get access token");
       ui.notifications?.error(
         game.i18n?.localize(`${LANG_NAME}.tokenError`) ?? "tokenError",
         {
@@ -360,17 +286,12 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
       return false;
     }
 
-    const liveKitAddress = liveKitServerType.urlRequired
-      ? liveKitConnectionSettings.url
-      : liveKitServerType.url;
+    const liveKitAddress = liveKitConnectionSettings.url;
 
     if (typeof liveKitAddress !== "string") {
-      const message = `${
-        game.i18n?.localize(liveKitServerType.label) ?? "liveKitServerType"
-      } doesn't provide a URL`;
-      log.error(message, liveKitServerType);
+      log.error("LiveKit server address is not configured");
       ui.notifications?.error(
-        `${game.i18n?.localize(`${LANG_NAME}.connectError`) ?? "connectError"}: ${message}`,
+        `${game.i18n?.localize(`${LANG_NAME}.connectError`) ?? "connectError"}: Server address is not configured`,
         { permanent: true },
       );
       this._liveKitClient.connectionState = ConnectionState.Disconnected;

@@ -1,4 +1,4 @@
-import { MODULE_NAME, TAVERN_AUTH_SERVER } from "./constants";
+import { MODULE_NAME } from "./constants";
 import { Logger } from "./logger";
 import debug from "debug";
 
@@ -53,19 +53,7 @@ export default function registerModuleSettings(): void {
     requiresReload: true,
   });
 
-  game.settings?.register(MODULE_NAME, "tavernPatreonToken", {
-    name: "LIVEKITAVCLIENT.tavernPatreonToken",
-    hint: "LIVEKITAVCLIENT.tavernPatreonTokenHint",
-    scope: "world",
-    config: false,
-    default: "",
-    type: new foundry.data.fields.StringField({
-      required: false,
-      blank: true,
-      initial: "",
-    }),
-    requiresReload: true,
-  });
+
 
   game.settings?.register(MODULE_NAME, "breakoutRoomRegistry", {
     name: "LIVEKITAVCLIENT.breakoutRoomRegistry",
@@ -377,23 +365,6 @@ export default function registerModuleSettings(): void {
   //
   // devMode Settings
   //
-
-  // TODO: The value for the authServer should be set by the selected LiveKit server
-  // Register auth server setting
-  game.settings?.register(MODULE_NAME, "authServer", {
-    name: "LIVEKITAVCLIENT.authServer",
-    hint: "LIVEKITAVCLIENT.authServerHint",
-    scope: "world",
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    config: game.settings.get(MODULE_NAME, "devMode") ?? false,
-    default: TAVERN_AUTH_SERVER,
-    type: new foundry.data.fields.StringField({
-      required: true,
-      blank: false,
-      initial: TAVERN_AUTH_SERVER,
-    }),
-    requiresReload: true,
-  });
 
   // Register forced TURN setting
   game.settings?.register(MODULE_NAME, "forceTurn", {

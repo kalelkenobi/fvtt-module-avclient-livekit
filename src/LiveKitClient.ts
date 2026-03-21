@@ -30,13 +30,10 @@ import {
 import { LANG_NAME, MODULE_NAME } from "./utils/constants";
 import LiveKitAVClient from "./LiveKitAVClient";
 import {
-  LiveKitServerType,
-  LiveKitServerTypes,
   SocketMessage,
 } from "../types/avclient-livekit";
 import { addContextOptions, breakout } from "./LiveKitBreakout";
 import { Logger } from "./utils/logger";
-import { getAccessToken, getTavernAccessToken } from "./utils/auth";
 import { debounceRefreshView } from "./utils/helpers";
 
 const log = new Logger();
@@ -69,30 +66,6 @@ export default class LiveKitClient {
   videoTrack: LocalVideoTrack | null = null;
   windowClickListener: EventListener | null = null;
 
-  liveKitServerTypes: LiveKitServerTypes = {
-    custom: {
-      key: "custom",
-      label: `${LANG_NAME}.serverTypeCustom`,
-      details: `${LANG_NAME}.serverDetailsCustom`,
-      urlRequired: true,
-      usernameRequired: true,
-      passwordRequired: true,
-      tokenFunction: getAccessToken,
-    },
-    tavern: {
-      key: "tavern",
-      label: `${LANG_NAME}.serverTypeTavern`,
-      details: `${LANG_NAME}.serverDetailsTavern`,
-      url: "livekit.tavern.at",
-      urlRequired: false,
-      usernameRequired: false,
-      passwordRequired: false,
-      tokenFunction: getTavernAccessToken,
-    },
-  };
-
-  defaultLiveKitServerType = this.liveKitServerTypes.custom;
-
   constructor(liveKitAvClient: LiveKitAVClient) {
     this.avMaster = liveKitAvClient.master;
     this.liveKitAvClient = liveKitAvClient;
@@ -102,7 +75,6 @@ export default class LiveKitClient {
       this.avMaster.render.bind(this.liveKitAvClient),
       2000,
     );
-    Hooks.callAll("liveKitClientAvailable", this);
   }
 
   /* -------------------------------------------- */
@@ -213,25 +185,7 @@ export default class LiveKitClient {
     this.setConnectionQualityIndicator(userId);
   }
 
-  addLiveKitServerType(liveKitServerType: LiveKitServerType): boolean {
-    if (!this.isLiveKitServerType(liveKitServerType)) {
-      log.error(
-        "Attempted to add a LiveKitServerType that does not meet the requirements:",
-        liveKitServerType,
-      );
-      return false;
-    }
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (this.liveKitServerTypes[liveKitServerType.key] !== undefined) {
-      log.error(
-        "Attempted to add a LiveKitServerType with a key that already exists:",
-        liveKitServerType,
-      );
-      return false;
-    }
-    this.liveKitServerTypes[liveKitServerType.key] = liveKitServerType;
-    return true;
-  }
+
 
   async attachAudioTrack(
     userId: string,
@@ -775,22 +729,6 @@ export default class LiveKitClient {
 
     // Set up room callbacks
     this.setRoomCallbacks();
-  }
-
-  isLiveKitServerType(
-    liveKitServerType: LiveKitServerType,
-  ): liveKitServerType is LiveKitServerType {
-    if (
-      typeof liveKitServerType.key !== "string" ||
-      typeof liveKitServerType.label !== "string" ||
-      typeof liveKitServerType.urlRequired !== "boolean" ||
-      typeof liveKitServerType.usernameRequired !== "boolean" ||
-      typeof liveKitServerType.passwordRequired !== "boolean" ||
-      !(liveKitServerType.tokenFunction instanceof Function)
-    ) {
-      return false;
-    }
-    return true;
   }
 
   isUserExternal(userId: string): boolean {

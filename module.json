@@ -4,13 +4,7 @@
   "description": "Use LiveKit to handle A/V",
   "authors": [
     {
-      "name": "bekit",
-      "email": "fvtt-module-help@bekit.net",
-      "url": "https://bekit.net",
-      "discord": "bekit#4213",
-      "patreon": "bekit",
-      "ko-fi": "bekit",
-      "twitter": "@bekit"
+      "name": "kalelkenobi"
     }
   ],
   "version": "0.6.5.9k",

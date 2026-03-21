@@ -1,18 +1,8 @@
 import { DeepPartial } from "fvtt-types/utils";
-import { LANG_NAME, MODULE_NAME } from "./utils/constants";
-import { delayReload } from "./utils/helpers";
+import { MODULE_NAME } from "./utils/constants";
 import { Logger } from "./utils/logger.js";
-import {
-  getAuthUserInfo,
-  TavernApiErrorResponse,
-  ValidatedUser,
-} from "./utils/auth.js";
 
 const log = new Logger("LiveKitAVConfig");
-
-interface PatreonLoginEvent extends MessageEvent {
-  id: string;
-}
 
 export default class LiveKitAVConfig
   extends foundry.applications.settings.menus.AVConfig
@@ -82,37 +72,10 @@ export default class LiveKitAVConfig
           log.error("Unable to get liveKitConnectionSettings");
         }
 
-        const serverTypes =
-          game.webrtc?.client._liveKitClient.liveKitServerTypes;
-
-        let authResponse: ValidatedUser | TavernApiErrorResponse | undefined;
-
-        if (game.user?.isGM) {
-          const authServer = game.settings.get(MODULE_NAME, "authServer");
-          const token = game.settings.get(MODULE_NAME, "tavernPatreonToken");
-
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-          (partContext as any).tavernPatreonToken = token;
-
-          if (
-            liveKitConnectionSettings?.serverType === "tavern" &&
-            authServer &&
-            authServer != "" &&
-            token &&
-            token != ""
-          ) {
-            authResponse = await getAuthUserInfo(authServer, token);
-          }
-        }
-
         // Put the data into the partContext
         // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
         (partContext as any).liveKitConnectionSettings =
           liveKitConnectionSettings;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-        (partContext as any).serverTypes = serverTypes;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
-        (partContext as any).authResponse = authResponse;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
         (partContext as any).devMode = game.settings?.get(
           MODULE_NAME,
@@ -168,142 +131,12 @@ export default class LiveKitAVConfig
     return partContext;
   }
 
-  async _patreonLogout(authServer: string) {
-    // GM only
-    if (!game.user?.isGM) return;
-
-    let tavernPatreonToken = game.settings.get(
-      MODULE_NAME,
-      "tavernPatreonToken",
-    );
-
-    const response = await fetch(`${authServer}/logout`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ id: tavernPatreonToken }),
-    });
-    if (!response.ok) {
-      ui.notifications?.error(`${LANG_NAME}.liveKitAccountLogoutError`, {
-        localize: true,
-      });
-      log.warn("Error signing out of Patreon account", response);
-    }
-
-    tavernPatreonToken = "";
-    await game.settings.set(
-      MODULE_NAME,
-      "tavernPatreonToken",
-      tavernPatreonToken,
-    );
-    delayReload();
-  }
-
-  async _patreonLoginListener(messageEvent: MessageEvent<PatreonLoginEvent>) {
-    // GM only
-    if (!game.user?.isGM) return;
-    const authServer = game.settings.get(MODULE_NAME, "authServer");
-    if (messageEvent.origin !== authServer) return;
-
-    messageEvent.preventDefault();
-
-    const tavernPatreonToken = messageEvent.data.id;
-
-    await game.settings.set(
-      MODULE_NAME,
-      "tavernPatreonToken",
-      tavernPatreonToken,
-    );
-    delayReload();
-  }
-
   /** @override */
   async _onRender(
     context: foundry.applications.api.ApplicationV2.RenderContextOf<this>,
     options: DeepPartial<foundry.applications.api.HandlebarsApplicationMixin.RenderOptions>,
   ) {
     await super._onRender(context, options);
-
-    const liveKitConnectionSettings = game.settings?.get(
-      MODULE_NAME,
-      "liveKitConnectionSettings",
-    );
-
-    // Activate or de-activate the custom server and tavern patreon sections based on current settings
-    this.element
-      .querySelector(
-        'select[name="avclient-livekit.liveKitConnectionSettings.serverType"]',
-      )
-      ?.addEventListener("change", (event) => {
-        if (!(event.currentTarget instanceof HTMLSelectElement)) return;
-
-        const customFieldset = this.element.querySelector(
-          "fieldset[data-custom-server-config]",
-        );
-        customFieldset?.toggleAttribute(
-          "hidden",
-          event.currentTarget.value !== "custom",
-        );
-
-        const tavernFieldset = this.element.querySelector(
-          "fieldset[data-tavern-server-config]",
-        );
-        tavernFieldset?.toggleAttribute(
-          "hidden",
-          // This can only be unhidden if the existing server type was also tavern, to avoid the patreon token being set before the server type is set
-          event.currentTarget.value !== "tavern" ||
-          liveKitConnectionSettings?.serverType !== "tavern",
-        );
-      });
-
-    // Options below are GM only
-    if (!game.user?.isGM) return;
-    const authServer = game.settings.get(MODULE_NAME, "authServer");
-
-    if (!authServer || authServer === "") {
-      log.error("Auth server is not set");
-      return;
-    }
-
-    const id = btoa(
-      `{"host": "${window.location.hostname}", "world": "${game.world.id}"}`,
-    );
-
-    const patreonButton = this.element.querySelector("#tavern-patreon-button");
-    if (patreonButton) {
-      patreonButton.addEventListener("click", (event: Event) => {
-        event.preventDefault();
-        window.addEventListener(
-          "message",
-          (event) => {
-            this._patreonLoginListener(event as PatreonLoginEvent).catch(
-              (e: unknown) => {
-                log.error("Error logging in to Patreon account", e);
-              },
-            );
-          },
-          { once: true },
-        );
-        window.open(
-          `${authServer}/auth/patreon?id=${id}&clientRole=participant`,
-          undefined,
-          "width=600,height=800",
-        );
-
-        this._setConfigSectionVisible("#tavern-auth-token", true);
-      });
-    }
-
-    const logoutButton = this.element.querySelector("#tavern-logout-button");
-    if (logoutButton) {
-      logoutButton.addEventListener("click", (event: Event) => {
-        event.preventDefault();
-        this._patreonLogout(authServer).catch((e: unknown) => {
-          log.error("Error logging out of Patreon account", e);
-        });
-      });
-    }
   }
 
   /**
