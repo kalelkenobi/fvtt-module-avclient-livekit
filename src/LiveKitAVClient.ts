@@ -60,7 +60,9 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
     this._liveKitClient = new LiveKitClient(this);
     this.room = null;
     this.initialConnectAttempted = false;
-    this.master.config = new LiveKitAVConfig({ webrtc: master });
+    // Type assertion needed to avoid TypeScript excessive stack depth error with complex fvtt-types
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+    this.master.config = new LiveKitAVConfig({ webrtc: master } as any);
   }
 
   /* -------------------------------------------- */
