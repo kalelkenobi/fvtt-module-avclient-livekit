@@ -10,7 +10,7 @@
   "version": "0.6.5.11k",
   "compatibility": {
     "minimum": "13",
-    "verified": "13"
+    "verified": "14"
   },
   "esmodules": ["avclient-livekit.js"],
   "styles": ["css/avclient-livekit.css"],
