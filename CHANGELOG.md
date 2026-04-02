@@ -1,5 +1,13 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.6.6k
+
+- chore: upgrade livekit-client to 2.18.1, typescript to 6.0.2 and others
+- refactor: remove proxy methods from LiveKitClient. Breaking change from original project
+- bump foundry verified version to 14
+- feat: Add gain control for primary and secondary audio sources when using mixed audio tracks
+- added AGENTS configuration for OpenCode
+
 ## 0.6.5.11k
 
 - refactor: extract track and UI management from `LiveKitClient` into dedicated `LiveKitTrackManager` and `LiveKitUIManager` classes, and add new documentation
