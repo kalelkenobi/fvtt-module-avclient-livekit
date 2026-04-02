@@ -39,6 +39,10 @@ export default class LiveKitTrackManager {
   videoTrack: LocalVideoTrack | null = null;
   screenTracks: LocalTrack[] = [];
 
+  // Gain nodes for independent volume control of mixed audio sources
+  private primaryGainNode: GainNode | null = null;
+  private secondaryGainNode: GainNode | null = null;
+
   constructor(client: LiveKitClient) {
     this.client = client;
   }
@@ -119,7 +123,9 @@ export default class LiveKitTrackManager {
   async changeAudioSource(forceStop = false): Promise<void> {
     // Force the stop of an existing track
     if (forceStop && this.audioTrack) {
-      await this.client.liveKitRoom?.localParticipant.unpublishTrack(this.audioTrack);
+      await this.client.liveKitRoom?.localParticipant.unpublishTrack(
+        this.audioTrack,
+      );
       this.audioTrack.stop();
       this.audioTrack = null;
       this.cleanupMixer();
@@ -152,15 +158,23 @@ export default class LiveKitTrackManager {
         }
       }
     } else {
-      const secondaryAudioSrc = game.settings?.get(MODULE_NAME, "secondaryAudioSrc");
-      if (this.mixedMediaStream || (secondaryAudioSrc && secondaryAudioSrc !== "disabled")) {
+      const secondaryAudioSrc = game.settings?.get(
+        MODULE_NAME,
+        "secondaryAudioSrc",
+      );
+      if (
+        this.mixedMediaStream ||
+        (secondaryAudioSrc && secondaryAudioSrc !== "disabled")
+      ) {
         // If we are currently using a mixed track, or switching to one, we cannot simply restart
         // the track. Instead, perform a full re-initialization.
         await this.changeAudioSource(true);
         return;
       }
 
-      const audioParams = this.getAudioParams(this.client.settings.get("client", "audioSrc") as string);
+      const audioParams = this.getAudioParams(
+        this.client.settings.get("client", "audioSrc") as string,
+      );
       if (audioParams) {
         await this.audioTrack.restartTrack(audioParams);
       }
@@ -207,7 +221,10 @@ export default class LiveKitTrackManager {
     }
   }
 
-  getAudioParams(audioSrc: string, isSecondary = false): AudioCaptureOptions | false {
+  getAudioParams(
+    audioSrc: string,
+    isSecondary = false,
+  ): AudioCaptureOptions | false {
     // Determine whether the user can send audio
     const canBroadcastAudio = this.client.avMaster.canUserBroadcastAudio(
       game.user?.id ?? "",
@@ -229,7 +246,10 @@ export default class LiveKitTrackManager {
 
     // Apply advanced audio input options if enabled
     if (game.settings?.get(MODULE_NAME, "advancedSettingsMode")) {
-      const targetSource = game.settings.get(MODULE_NAME, "advancedSettingsTargetSource");
+      const targetSource = game.settings.get(
+        MODULE_NAME,
+        "advancedSettingsTargetSource",
+      );
 
       if (
         targetSource === "both" ||
@@ -262,6 +282,8 @@ export default class LiveKitTrackManager {
       this.audioContext = null;
     }
     this.mixedMediaStream = null;
+    this.primaryGainNode = null;
+    this.secondaryGainNode = null;
   }
 
   getUserAudioTrack(
@@ -320,10 +342,18 @@ export default class LiveKitTrackManager {
   /**
    * Create a mixed audio track from primary and secondary microphone inputs
    */
-  async createMixedAudioTrack(primaryTrack: LocalAudioTrack): Promise<LocalAudioTrack | null> {
-    const secondaryAudioSrc = game.settings?.get(MODULE_NAME, "secondaryAudioSrc");
+  async createMixedAudioTrack(
+    primaryTrack: LocalAudioTrack,
+  ): Promise<LocalAudioTrack | null> {
+    const secondaryAudioSrc = game.settings?.get(
+      MODULE_NAME,
+      "secondaryAudioSrc",
+    );
 
-    const audioParams = this.getAudioParams(secondaryAudioSrc ?? "disabled", true);
+    const audioParams = this.getAudioParams(
+      secondaryAudioSrc ?? "disabled",
+      true,
+    );
 
     if (!audioParams) {
       return null;
@@ -364,18 +394,32 @@ export default class LiveKitTrackManager {
         new MediaStream([secondaryMediaTrack]),
       );
 
-      // Use gain nodes to prevent clipping when summing two sources
-      const primaryGain = this.audioContext.createGain();
-      primaryGain.gain.value = 1.0;
-      const secondaryGain = this.audioContext.createGain();
-      secondaryGain.gain.value = 1.0;
+      // Create gain nodes for independent volume control of each source
+      // Read initial values from settings (0-200 percent, converted to 0.0-2.0)
+      const primaryGainPercent =
+        game.settings?.get(MODULE_NAME, "primaryAudioGain") ?? 100;
+      const secondaryGainPercent =
+        game.settings?.get(MODULE_NAME, "secondaryAudioGain") ?? 100;
+
+      this.primaryGainNode = this.audioContext.createGain();
+      this.primaryGainNode.gain.value = primaryGainPercent / 100;
+      this.secondaryGainNode = this.audioContext.createGain();
+      this.secondaryGainNode.gain.value = secondaryGainPercent / 100;
+
+      log.debug(
+        "Created mixed audio track with gain settings - primary:",
+        primaryGainPercent,
+        "%, secondary:",
+        secondaryGainPercent,
+        "%",
+      );
 
       const destination = this.audioContext.createMediaStreamDestination();
       destination.channelCount = 2;
       destination.channelCountMode = "explicit";
 
-      primarySource.connect(primaryGain).connect(destination);
-      secondarySource.connect(secondaryGain).connect(destination);
+      primarySource.connect(this.primaryGainNode).connect(destination);
+      secondarySource.connect(this.secondaryGainNode).connect(destination);
 
       this.mixedMediaStream = destination.stream;
 
@@ -409,7 +453,9 @@ export default class LiveKitTrackManager {
     this.cleanupMixer();
 
     // Get audio parameters
-    const audioParams = this.getAudioParams(this.client.settings.get("client", "audioSrc") as string);
+    const audioParams = this.getAudioParams(
+      this.client.settings.get("client", "audioSrc") as string,
+    );
 
     // Get the track if requested
     if (audioParams) {
@@ -609,9 +655,9 @@ export default class LiveKitTrackManager {
       videoSrc !== "disabled" &&
       canBroadcastVideo
       ? {
-        deviceId: videoSrc,
-        resolution: videoResolution,
-      }
+          deviceId: videoSrc,
+          resolution: videoResolution,
+        }
       : false;
   }
 
@@ -690,7 +736,9 @@ export default class LiveKitTrackManager {
       for (const screenTrack of this.screenTracks) {
         log.debug("screenTrack disable:", screenTrack);
         // Unpublish the screen share track
-        await this.client.liveKitRoom?.localParticipant.unpublishTrack(screenTrack);
+        await this.client.liveKitRoom?.localParticipant.unpublishTrack(
+          screenTrack,
+        );
 
         // Restart our video track
         if (screenTrack instanceof LocalVideoTrack && this.videoTrack) {
@@ -726,17 +774,71 @@ export default class LiveKitTrackManager {
   }
 
   applyAdvancedTrackOptions(trackPublishOptions: TrackPublishOptions): void {
-    trackPublishOptions.audioPreset = { maxBitrate: (game.settings?.get(MODULE_NAME, "audioBitRate") ?? 128) * 1000 };
+    trackPublishOptions.audioPreset = {
+      maxBitrate:
+        (game.settings?.get(MODULE_NAME, "audioBitRate") ?? 128) * 1000,
+    };
     trackPublishOptions.dtx = game.settings?.get(MODULE_NAME, "dtx");
     trackPublishOptions.red = game.settings?.get(MODULE_NAME, "red");
-    trackPublishOptions.videoCodec = game.settings?.get(MODULE_NAME, "videoCodec") as "vp9";
-    trackPublishOptions.backupCodec = { codec: game.settings?.get(MODULE_NAME, "backupCodec") as "vp8" };
+    trackPublishOptions.videoCodec = game.settings?.get(
+      MODULE_NAME,
+      "videoCodec",
+    ) as "vp9";
+    trackPublishOptions.backupCodec = {
+      codec: game.settings?.get(MODULE_NAME, "backupCodec") as "vp8",
+    };
   }
 
   applyAdvancedAudioOptions(audioCaptureOptions: AudioCaptureOptions): void {
-    audioCaptureOptions.autoGainControl = game.settings?.get(MODULE_NAME, "autoGainControl");
-    audioCaptureOptions.echoCancellation = game.settings?.get(MODULE_NAME, "echoCancellation");
-    audioCaptureOptions.noiseSuppression = game.settings?.get(MODULE_NAME, "noiseSuppression");
-    audioCaptureOptions.voiceIsolation = game.settings?.get(MODULE_NAME, "voiceIsolation");
+    audioCaptureOptions.autoGainControl = game.settings?.get(
+      MODULE_NAME,
+      "autoGainControl",
+    );
+    audioCaptureOptions.echoCancellation = game.settings?.get(
+      MODULE_NAME,
+      "echoCancellation",
+    );
+    audioCaptureOptions.noiseSuppression = game.settings?.get(
+      MODULE_NAME,
+      "noiseSuppression",
+    );
+    audioCaptureOptions.voiceIsolation = game.settings?.get(
+      MODULE_NAME,
+      "voiceIsolation",
+    );
+  }
+
+  /**
+   * Set the gain for the primary audio source in the mixed track.
+   * @param percent - Gain as a percentage (0-200, where 100 = original volume)
+   */
+  setPrimaryGain(percent: number): void {
+    if (!this.primaryGainNode) {
+      log.debug("setPrimaryGain called but no primary gain node available");
+      return;
+    }
+    const gainValue = percent / 100;
+    log.debug("Setting primary audio gain to", percent, "% (", gainValue, ")");
+    this.primaryGainNode.gain.value = gainValue;
+  }
+
+  /**
+   * Set the gain for the secondary audio source in the mixed track.
+   * @param percent - Gain as a percentage (0-200, where 100 = original volume)
+   */
+  setSecondaryGain(percent: number): void {
+    if (!this.secondaryGainNode) {
+      log.debug("setSecondaryGain called but no secondary gain node available");
+      return;
+    }
+    const gainValue = percent / 100;
+    log.debug(
+      "Setting secondary audio gain to",
+      percent,
+      "% (",
+      gainValue,
+      ")",
+    );
+    this.secondaryGainNode.gain.value = gainValue;
   }
 }

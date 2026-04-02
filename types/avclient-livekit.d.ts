@@ -117,5 +117,19 @@ declare global {
     "avclient-livekit.forceTurn": foundry.data.fields.BooleanField<{
       initial: false;
     }>;
+    "avclient-livekit.primaryAudioGain": foundry.data.fields.NumberField<{
+      initial: 100;
+      min: 0;
+      max: 200;
+      step: 5;
+      integer: true;
+    }>;
+    "avclient-livekit.secondaryAudioGain": foundry.data.fields.NumberField<{
+      initial: 100;
+      min: 0;
+      max: 200;
+      step: 5;
+      integer: true;
+    }>;
   }
 }

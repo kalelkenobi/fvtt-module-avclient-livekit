@@ -25,6 +25,52 @@ export default function registerModuleSettings(): void {
     },
   });
 
+  // Gain controls for mixed audio sources (visible only in advanced mode with secondary source enabled)
+  const showGainControls =
+    (game.settings?.get(MODULE_NAME, "advancedSettingsMode") ?? false) &&
+    (game.settings?.get(MODULE_NAME, "secondaryAudioSrc") ?? "disabled") !==
+      "disabled";
+
+  game.settings?.register(MODULE_NAME, "primaryAudioGain", {
+    name: "LIVEKITAVCLIENT.primaryAudioGain",
+    hint: "LIVEKITAVCLIENT.primaryAudioGainHint",
+    scope: "client",
+    config: showGainControls,
+    default: 100,
+    type: new foundry.data.fields.NumberField({
+      initial: 100,
+      min: 0,
+      max: 200,
+      step: 5,
+      integer: true,
+    }),
+    range: { min: 0, max: 200, step: 5 },
+    onChange: () => {
+      const value = game.settings.get(MODULE_NAME, "primaryAudioGain") ?? 100;
+      game.webrtc?.client._liveKitClient.trackManager.setPrimaryGain(value);
+    },
+  });
+
+  game.settings?.register(MODULE_NAME, "secondaryAudioGain", {
+    name: "LIVEKITAVCLIENT.secondaryAudioGain",
+    hint: "LIVEKITAVCLIENT.secondaryAudioGainHint",
+    scope: "client",
+    config: showGainControls,
+    default: 100,
+    type: new foundry.data.fields.NumberField({
+      initial: 100,
+      min: 0,
+      max: 200,
+      step: 5,
+      integer: true,
+    }),
+    range: { min: 0, max: 200, step: 5 },
+    onChange: () => {
+      const value = game.settings.get(MODULE_NAME, "secondaryAudioGain") ?? 100;
+      game.webrtc?.client._liveKitClient.trackManager.setSecondaryGain(value);
+    },
+  });
+
   game.settings?.register(MODULE_NAME, "autoConnect", {
     name: "LIVEKITAVCLIENT.autoConnect",
     hint: "LIVEKITAVCLIENT.autoConnectHint",
@@ -52,8 +98,6 @@ export default function registerModuleSettings(): void {
     default: {},
     requiresReload: true,
   });
-
-
 
   game.settings?.register(MODULE_NAME, "breakoutRoomRegistry", {
     name: "LIVEKITAVCLIENT.breakoutRoomRegistry",
@@ -105,7 +149,10 @@ export default function registerModuleSettings(): void {
       game.webrtc?.client._liveKitClient
         .changeAudioSource(true)
         .catch((error: unknown) => {
-          log.error("advancedSettingsTargetSource: Error changing target capture source", error);
+          log.error(
+            "advancedSettingsTargetSource: Error changing target capture source",
+            error,
+          );
         });
     },
   });
