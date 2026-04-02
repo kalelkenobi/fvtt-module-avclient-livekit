@@ -22,7 +22,7 @@ Hooks.on("init", () => {
   // Add renderCameraViews hook after init
   Hooks.on("renderCameraViews", (cameraViews, cameraViewsElement) => {
     if (game.webrtc?.client._liveKitClient) {
-      game.webrtc.client._liveKitClient.onRenderCameraViews(
+      game.webrtc.client._liveKitClient.uiManager.onRenderCameraViews(
         cameraViews,
         cameraViewsElement,
       );
@@ -57,7 +57,7 @@ Hooks.on("ready", () => {
 Hooks.on("getUserContextOptions", (playersApp, contextOptions) => {
   // If the WebRTC client is available, call its method to add context options
   if (game.webrtc?.client) {
-    game.webrtc.client._liveKitClient.onGetUserContextOptions(
+    game.webrtc.client._liveKitClient.uiManager.onGetUserContextOptions(
       playersApp,
       contextOptions,
     );

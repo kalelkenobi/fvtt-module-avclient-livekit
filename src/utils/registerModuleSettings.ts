@@ -17,7 +17,7 @@ export default function registerModuleSettings(): void {
       initial: "disabled",
     }),
     onChange: () => {
-      game.webrtc?.client._liveKitClient
+      game.webrtc?.client._liveKitClient.trackManager
         .changeAudioSource(true)
         .catch((error: unknown) => {
           log.error("secondaryAudioSrc: Error changing audio source", error);
@@ -146,7 +146,7 @@ export default function registerModuleSettings(): void {
       },
     }),
     onChange: () => {
-      game.webrtc?.client._liveKitClient
+      game.webrtc?.client._liveKitClient.trackManager
         .changeAudioSource(true)
         .catch((error: unknown) => {
           log.error(
@@ -167,7 +167,7 @@ export default function registerModuleSettings(): void {
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
     onChange: () => {
-      game.webrtc?.client._liveKitClient
+      game.webrtc?.client._liveKitClient.trackManager
         .changeAudioSource(true)
         .catch((error: unknown) => {
           log.error("autoGainControl: Error changing audio option", error);
@@ -184,7 +184,7 @@ export default function registerModuleSettings(): void {
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
     onChange: () => {
-      game.webrtc?.client._liveKitClient
+      game.webrtc?.client._liveKitClient.trackManager
         .changeAudioSource(true)
         .catch((error: unknown) => {
           log.error("echoCancellation: Error changing audio option", error);
@@ -201,7 +201,7 @@ export default function registerModuleSettings(): void {
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
     onChange: () => {
-      game.webrtc?.client._liveKitClient
+      game.webrtc?.client._liveKitClient.trackManager
         .changeAudioSource(true)
         .catch((error: unknown) => {
           log.error("noiseSuppression: Error changing audio option", error);
@@ -218,7 +218,7 @@ export default function registerModuleSettings(): void {
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
     onChange: () => {
-      game.webrtc?.client._liveKitClient
+      game.webrtc?.client._liveKitClient.trackManager
         .changeAudioSource(true)
         .catch((error: unknown) => {
           log.error("voiceIsolation: Error changing audio option", error);
@@ -244,7 +244,7 @@ export default function registerModuleSettings(): void {
       integer: true,
     }),
     onChange: () => {
-      game.webrtc?.client._liveKitClient
+      game.webrtc?.client._liveKitClient.trackManager
         .changeAudioSource(true)
         .catch((error: unknown) => {
           log.error("audioBitRate: Error changing track bitrate", error);
@@ -261,7 +261,7 @@ export default function registerModuleSettings(): void {
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
     onChange: () => {
-      game.webrtc?.client._liveKitClient
+      game.webrtc?.client._liveKitClient.trackManager
         .changeAudioSource(true)
         .catch((error: unknown) => {
           log.error("dtx: Error changing DTX for track", error);
@@ -278,7 +278,7 @@ export default function registerModuleSettings(): void {
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
     onChange: () => {
-      game.webrtc?.client._liveKitClient
+      game.webrtc?.client._liveKitClient.trackManager
         .changeAudioSource(true)
         .catch((error: unknown) => {
           log.error("red: Error changing RED for track", error);
@@ -306,7 +306,7 @@ export default function registerModuleSettings(): void {
       },
     }),
     onChange: () => {
-      game.webrtc?.client._liveKitClient
+      game.webrtc?.client._liveKitClient.trackManager
         .changeVideoSource()
         .catch((error: unknown) => {
           log.error("videoCodec: Error changing video source", error);
@@ -331,7 +331,7 @@ export default function registerModuleSettings(): void {
       },
     }),
     onChange: () => {
-      game.webrtc?.client._liveKitClient
+      game.webrtc?.client._liveKitClient.trackManager
         .changeVideoSource()
         .catch((error: unknown) => {
           log.error("backupCodec: Error changing video source", error);

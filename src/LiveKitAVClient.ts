@@ -97,7 +97,7 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
       this._liveKitClient.initializeRoom();
 
       // Initialize the local tracks
-      await this._liveKitClient.initializeLocalTracks();
+      await this._liveKitClient.trackManager.initializeLocalTracks();
 
       // Broadcast our current hidden & muted states
       game.user?.broadcastActivity({
@@ -256,23 +256,19 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
     }
 
     const accessToken = await getAccessToken(
-        liveKitConnectionSettings.username, // The LiveKit API Key
-        liveKitConnectionSettings.password, // The LiveKit Secret Key
-        this.room,
-        userName,
-        metadata,
-      )
-      .catch((error: unknown) => {
-        let message = error;
-        if (error instanceof Error) {
-          message = error.message;
-        }
-        log.error(
-          "An error occurred when generating access token:",
-          message,
-        );
-        return "";
-      });
+      liveKitConnectionSettings.username, // The LiveKit API Key
+      liveKitConnectionSettings.password, // The LiveKit Secret Key
+      this.room,
+      userName,
+      metadata,
+    ).catch((error: unknown) => {
+      let message = error;
+      if (error instanceof Error) {
+        message = error.message;
+      }
+      log.error("An error occurred when generating access token:", message);
+      return "";
+    });
 
     if (!accessToken) {
       log.error("Could not get access token");
@@ -349,7 +345,7 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
         `${game.i18n?.localize(`${LANG_NAME}.connectError`) ?? "connectError"}: ${String(message)}`,
         { permanent: true },
       );
-      this._liveKitClient.setConnectionButtons(false);
+      this._liveKitClient.uiManager.setConnectionButtons(false);
       this._liveKitClient.connectionState = ConnectionState.Disconnected;
       return false;
     }
@@ -532,7 +528,7 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
    * @returns {boolean}
    */
   isAudioEnabled(): boolean {
-    return !!this._liveKitClient.audioTrack;
+    return !!this._liveKitClient.trackManager.audioTrack;
   }
 
   /* -------------------------------------------- */
@@ -542,7 +538,7 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
    * @returns {boolean}
    */
   isVideoEnabled(): boolean {
-    return !!this._liveKitClient.videoTrack;
+    return !!this._liveKitClient.trackManager.videoTrack;
   }
 
   /* -------------------------------------------- */
@@ -586,7 +582,7 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
     }
 
     this._liveKitClient.audioBroadcastEnabled = broadcast;
-    this._liveKitClient.setAudioEnabledState(broadcast);
+    this._liveKitClient.trackManager.setAudioEnabledState(broadcast);
   }
 
   /* -------------------------------------------- */
@@ -604,32 +600,42 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
       return;
     }
 
-    if (!this._liveKitClient.videoTrack) {
+    if (!this._liveKitClient.trackManager.videoTrack) {
       log.debug("toggleVideo called but no video track available");
       return;
     }
 
     if (!enable) {
-      log.debug("Muting video track", this._liveKitClient.videoTrack);
-      this._liveKitClient.videoTrack.mute().catch((error: unknown) => {
-        log.error("Error muting video track:", error);
-      });
+      log.debug(
+        "Muting video track",
+        this._liveKitClient.trackManager.videoTrack,
+      );
+      this._liveKitClient.trackManager.videoTrack
+        .mute()
+        .catch((error: unknown) => {
+          log.error("Error muting video track:", error);
+        });
     } else {
       // Ensure the video track is published to avoid an error when un-muting an unpublished track
       if (
-        !this._liveKitClient.videoTrack.sid ||
+        !this._liveKitClient.trackManager.videoTrack.sid ||
         !this._liveKitClient.liveKitRoom?.localParticipant.videoTrackPublications.has(
-          this._liveKitClient.videoTrack.sid,
+          this._liveKitClient.trackManager.videoTrack.sid,
         )
       ) {
         log.debug("toggleVideo unmute called but video track is not published");
         return;
       }
 
-      log.debug("Un-muting video track", this._liveKitClient.videoTrack);
-      this._liveKitClient.videoTrack.unmute().catch((error: unknown) => {
-        log.error("Error un-muting video track:", error);
-      });
+      log.debug(
+        "Un-muting video track",
+        this._liveKitClient.trackManager.videoTrack,
+      );
+      this._liveKitClient.trackManager.videoTrack
+        .unmute()
+        .catch((error: unknown) => {
+          log.error("Error un-muting video track:", error);
+        });
     }
     this.master.render();
   }
@@ -650,13 +656,16 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
     // If this is for our local user, attach our video track using LiveKit
     if (userId === game.user?.id) {
       // Attach only our video track
-      const userVideoTrack = this._liveKitClient.videoTrack;
+      const userVideoTrack = this._liveKitClient.trackManager.videoTrack;
       if (userVideoTrack) {
-        this._liveKitClient.attachVideoTrack(userVideoTrack, videoElement);
+        this._liveKitClient.trackManager.attachVideoTrack(
+          userVideoTrack,
+          videoElement,
+        );
       }
 
       // Add connection quality indicator
-      this._liveKitClient.addConnectionQualityIndicator(userId);
+      this._liveKitClient.uiManager.addConnectionQualityIndicator(userId);
       return;
     }
 
@@ -667,17 +676,22 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
     }
 
     // For all other users, get their video and audio tracks
-    const userAudioTrack = this._liveKitClient.getUserAudioTrack(userId);
-    const userVideoTrack = this._liveKitClient.getUserVideoTrack(userId);
+    const userAudioTrack =
+      this._liveKitClient.trackManager.getUserAudioTrack(userId);
+    const userVideoTrack =
+      this._liveKitClient.trackManager.getUserVideoTrack(userId);
 
     // Add the video for the user
     if (userVideoTrack) {
-      this._liveKitClient.attachVideoTrack(userVideoTrack, videoElement);
+      this._liveKitClient.trackManager.attachVideoTrack(
+        userVideoTrack,
+        videoElement,
+      );
     }
 
     // Get the audio element for the user
     if (userAudioTrack instanceof RemoteAudioTrack) {
-      const audioElement = this._liveKitClient.getUserAudioElement(
+      const audioElement = this._liveKitClient.uiManager.getUserAudioElement(
         userId,
         videoElement,
         userAudioTrack.source,
@@ -685,7 +699,7 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
 
       // Add the audio for the user
       if (audioElement) {
-        await this._liveKitClient.attachAudioTrack(
+        await this._liveKitClient.trackManager.attachAudioTrack(
           userId,
           userAudioTrack,
           audioElement,
@@ -694,7 +708,7 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
     }
 
     // Add connection quality indicator
-    this._liveKitClient.addConnectionQualityIndicator(userId);
+    this._liveKitClient.uiManager.addConnectionQualityIndicator(userId);
 
     const event = new CustomEvent("webrtcVideoSet", { detail: userId });
     videoElement.dispatchEvent(event);
@@ -717,16 +731,20 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
     // Change audio source
     const audioSourceChange = keys.has("client.audioSrc");
     if (audioSourceChange)
-      this._liveKitClient.changeAudioSource().catch((error: unknown) => {
-        log.error("Error changing audio source:", error);
-      });
+      this._liveKitClient.trackManager
+        .changeAudioSource()
+        .catch((error: unknown) => {
+          log.error("Error changing audio source:", error);
+        });
 
     // Change video source
     const videoSourceChange = keys.has("client.videoSrc");
     if (videoSourceChange)
-      this._liveKitClient.changeVideoSource().catch((error: unknown) => {
-        log.error("Error changing video source:", error);
-      });
+      this._liveKitClient.trackManager
+        .changeVideoSource()
+        .catch((error: unknown) => {
+          log.error("Error changing video source:", error);
+        });
 
     // Change voice broadcasting mode
     const modeChange = [
@@ -766,7 +784,7 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
    */
   async updateLocalStream(): Promise<void> {
     log.debug("updateLocalStream");
-    await this._liveKitClient.changeAudioSource();
-    await this._liveKitClient.changeVideoSource();
+    await this._liveKitClient.trackManager.changeAudioSource();
+    await this._liveKitClient.trackManager.changeVideoSource();
   }
 }

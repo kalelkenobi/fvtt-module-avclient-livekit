@@ -7,9 +7,6 @@ import {
   RoomOptions,
   ConnectionState,
   DisconnectReason,
-  RemoteAudioTrack,
-  VideoTrack,
-  Track,
 } from "livekit-client";
 import { LANG_NAME } from "./utils/constants";
 import LiveKitAVClient from "./LiveKitAVClient";
@@ -57,18 +54,6 @@ export default class LiveKitClient {
     this.trackManager = new LiveKitTrackManager(this);
     this.uiManager = new LiveKitUIManager(this);
   }
-
-  /* -------------------------------------------- */
-  /*  Compatibility Proxy Getters                 */
-  /* -------------------------------------------- */
-
-  get audioTrack() { return this.trackManager.audioTrack; }
-  get primaryAudioTrack() { return this.trackManager.primaryAudioTrack; }
-  get secondaryAudioTrack() { return this.trackManager.secondaryAudioTrack; }
-  get videoTrack() { return this.trackManager.videoTrack; }
-  get screenTracks() { return this.trackManager.screenTracks; }
-  get audioContext() { return this.trackManager.audioContext; }
-  get mixedMediaStream() { return this.trackManager.mixedMediaStream; }
 
   /* -------------------------------------------- */
   /*  LiveKit Internal methods                    */
@@ -267,7 +252,7 @@ export default class LiveKitClient {
     // Clear breakout room cache if user is leaving a breakout room
     if (
       this.settings.get("client", `users.${fvttUserId}.liveKitBreakoutRoom`) ===
-      this.liveKitAvClient.room &&
+        this.liveKitAvClient.room &&
       this.liveKitAvClient.room === this.breakoutRoom
     ) {
       this.settings.set(
@@ -291,7 +276,7 @@ export default class LiveKitClient {
     log.warn("Reconnecting to room");
     ui.notifications?.warn(
       game.i18n?.localize("WEBRTC.ConnectionLostWarning") ??
-      "ConnectionLostWarning",
+        "ConnectionLostWarning",
     );
   }
 
@@ -359,7 +344,7 @@ export default class LiveKitClient {
       content: `<p>${
         game.i18n?.localize(`${LANG_NAME}.externalAVJoinMessage`) ??
         "externalAVJoinMessage"
-        }</p>`,
+      }</p>`,
       yes: {
         label: `${LANG_NAME}.externalAVJoinButton`,
         icon: "fa-solid fa-check",
@@ -439,14 +424,20 @@ export default class LiveKitClient {
         RoomEvent.ParticipantDisconnected,
         this.onParticipantDisconnected.bind(this),
       )
-      .on(RoomEvent.TrackSubscribed, this.trackManager.onTrackSubscribed.bind(this.trackManager))
+      .on(
+        RoomEvent.TrackSubscribed,
+        this.trackManager.onTrackSubscribed.bind(this.trackManager),
+      )
       .on(RoomEvent.TrackSubscriptionFailed, (...args) => {
         log.error("RoomEvent TrackSubscriptionFailed:", args);
       })
       .on(RoomEvent.TrackUnpublished, (...args) => {
         log.debug("RoomEvent TrackUnpublished:", args);
       })
-      .on(RoomEvent.TrackUnsubscribed, this.trackManager.onTrackUnSubscribed.bind(this.trackManager))
+      .on(
+        RoomEvent.TrackUnsubscribed,
+        this.trackManager.onTrackUnSubscribed.bind(this.trackManager),
+      )
       .on(RoomEvent.LocalTrackUnpublished, (...args) => {
         log.debug("RoomEvent LocalTrackUnpublished:", args);
       })
@@ -456,8 +447,14 @@ export default class LiveKitClient {
       )
       .on(RoomEvent.Disconnected, this.onDisconnected.bind(this))
       .on(RoomEvent.Reconnecting, this.onReconnecting.bind(this))
-      .on(RoomEvent.TrackMuted, this.trackManager.onTrackMuteChanged.bind(this.trackManager))
-      .on(RoomEvent.TrackUnmuted, this.trackManager.onTrackMuteChanged.bind(this.trackManager))
+      .on(
+        RoomEvent.TrackMuted,
+        this.trackManager.onTrackMuteChanged.bind(this.trackManager),
+      )
+      .on(
+        RoomEvent.TrackUnmuted,
+        this.trackManager.onTrackMuteChanged.bind(this.trackManager),
+      )
       .on(RoomEvent.ParticipantMetadataChanged, (...args) => {
         log.debug("RoomEvent ParticipantMetadataChanged:", args);
       })
@@ -466,26 +463,4 @@ export default class LiveKitClient {
       })
       .on(RoomEvent.Reconnected, this.onReconnected.bind(this));
   }
-
-  /* -------------------------------------------- */
-  /*  Compatibility Proxy Methods                 */
-  /* -------------------------------------------- */
-
-  async initializeLocalTracks() { await this.trackManager.initializeLocalTracks(); }
-  async changeAudioSource(forceStop = false) { await this.trackManager.changeAudioSource(forceStop); }
-  async changeVideoSource() { await this.trackManager.changeVideoSource(); }
-  setAudioEnabledState(enable: boolean) { this.trackManager.setAudioEnabledState(enable); }
-  async shareScreen(enable: boolean) { await this.trackManager.shareScreen(enable); }
-  async attachAudioTrack(userId: string, userAudioTrack: RemoteAudioTrack, audioElement: HTMLAudioElement) { await this.trackManager.attachAudioTrack(userId, userAudioTrack, audioElement); }
-  attachVideoTrack(userVideoTrack: VideoTrack, videoElement: HTMLVideoElement) { this.trackManager.attachVideoTrack(userVideoTrack, videoElement); }
-  getUserAudioTrack(userId: string | undefined) { return this.trackManager.getUserAudioTrack(userId); }
-  getUserVideoTrack(userId: string | undefined) { return this.trackManager.getUserVideoTrack(userId); }
-
-  addConnectionButtons(element: HTMLElement) { this.uiManager.addConnectionButtons(element); }
-  setConnectionButtons(connected: boolean) { this.uiManager.setConnectionButtons(connected); }
-  addConnectionQualityIndicator(userId: string) { this.uiManager.addConnectionQualityIndicator(userId); }
-  getUserAudioElement(userId: string, videoElement: HTMLVideoElement | null = null, audioType: Track.Source) { return this.uiManager.getUserAudioElement(userId, videoElement, audioType); }
-  
-  onRenderCameraViews(cameraviews: foundry.applications.apps.av.CameraViews, html: HTMLElement) { this.uiManager.onRenderCameraViews(cameraviews, html); }
-  onGetUserContextOptions(playersApp: foundry.applications.ui.Players, contextOptions: foundry.applications.ux.ContextMenu.Entry<HTMLElement>[]) { this.uiManager.onGetUserContextOptions(playersApp, contextOptions); }
 }
