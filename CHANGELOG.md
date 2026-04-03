@@ -1,5 +1,9 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.6.7k
+
+- fix: correct registration order error, update documentation and AGENTS.md
+
 ## 0.6.6k
 
 - chore: upgrade livekit-client to 2.18.1, typescript to 6.0.2 and others
