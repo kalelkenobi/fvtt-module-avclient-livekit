@@ -35,7 +35,7 @@ importers:
         version: 4.1.13
       '@vitejs/plugin-basic-ssl':
         specifier: ^2.3.0
-        version: 2.3.0(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.3))
+        version: 2.3.0(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.1)(esbuild@0.27.3))
       eslint:
         specifier: ^10.1.0
         version: 10.1.0
@@ -53,16 +53,16 @@ importers:
         version: 8.58.0(eslint@10.1.0)(typescript@6.0.2)
       vite:
         specifier: ^8.0.3
-        version: 8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.3)
+        version: 8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.1)(esbuild@0.27.3)
       vite-plugin-checker:
         specifier: 0.12.0
-        version: 0.12.0(eslint@10.1.0)(optionator@0.9.4)(typescript@6.0.2)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.3))
+        version: 0.12.0(eslint@10.1.0)(optionator@0.9.4)(typescript@6.0.2)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.1)(esbuild@0.27.3))
       vite-plugin-eslint2:
         specifier: ^5.1.0
-        version: 5.1.0(eslint@10.1.0)(rolldown@1.0.0-rc.12(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1))(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.3))
+        version: 5.1.0(eslint@10.1.0)(rolldown@1.0.0-rc.12(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1))(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.1)(esbuild@0.27.3))
       vite-plugin-static-copy:
         specifier: ^4.0.0
-        version: 4.0.0(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.3))
+        version: 4.0.0(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.1)(esbuild@0.27.3))
 
 packages:
 
@@ -812,8 +812,8 @@ packages:
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
 
-  '@types/node@25.5.0':
-    resolution: {integrity: sha512-jp2P3tQMSxWugkCUKLRPVUpGaL5MVFwF8RDuSRztfwgN1wmqJeMSbKlnEtQqU8UrhTmzEmZdu2I6v2dpp7XIxw==}
+  '@types/node@25.5.1':
+    resolution: {integrity: sha512-lgrR3HRNQdTEeeXBnLURFO4JIIbpcVcMlLM9IG0jsNRTRNSbMkm9S2hyhxhnokke1NM25Dr9QghgeB5PQKolrw==}
 
   '@types/showdown@2.0.6':
     resolution: {integrity: sha512-pTvD/0CIeqe4x23+YJWlX2gArHa8G0J0Oh6GKaVXV7TAeickpkkZiNOgFcFcmLQ5lB/K0qBJL1FtRYltBfbGCQ==}
@@ -2559,7 +2559,7 @@ snapshots:
 
   '@types/cors@2.8.19':
     dependencies:
-      '@types/node': 25.5.0
+      '@types/node': 25.5.1
 
   '@types/css-font-loading-module@0.0.12': {}
 
@@ -2585,7 +2585,7 @@ snapshots:
 
   '@types/ms@2.1.0': {}
 
-  '@types/node@25.5.0':
+  '@types/node@25.5.1':
     dependencies:
       undici-types: 7.18.2
 
@@ -2593,13 +2593,13 @@ snapshots:
 
   '@types/simple-peer@9.11.9':
     dependencies:
-      '@types/node': 25.5.0
+      '@types/node': 25.5.1
 
   '@types/sizzle@2.3.10': {}
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 25.5.0
+      '@types/node': 25.5.1
 
   '@types/youtube@0.0.50': {}
 
@@ -2694,9 +2694,9 @@ snapshots:
       '@typescript-eslint/types': 8.58.0
       eslint-visitor-keys: 5.0.1
 
-  '@vitejs/plugin-basic-ssl@2.3.0(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.3))':
+  '@vitejs/plugin-basic-ssl@2.3.0(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.1)(esbuild@0.27.3))':
     dependencies:
-      vite: 8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.3)
+      vite: 8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.1)(esbuild@0.27.3)
 
   accepts@1.3.8:
     dependencies:
@@ -2852,7 +2852,7 @@ snapshots:
   engine.io@6.6.6:
     dependencies:
       '@types/cors': 2.8.19
-      '@types/node': 25.5.0
+      '@types/node': 25.5.1
       '@types/ws': 8.18.1
       accepts: 1.3.8
       base64id: 2.0.0
@@ -3648,7 +3648,7 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite-plugin-checker@0.12.0(eslint@10.1.0)(optionator@0.9.4)(typescript@6.0.2)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.3)):
+  vite-plugin-checker@0.12.0(eslint@10.1.0)(optionator@0.9.4)(typescript@6.0.2)(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.1)(esbuild@0.27.3)):
     dependencies:
       '@babel/code-frame': 7.29.0
       chokidar: 4.0.3
@@ -3657,33 +3657,33 @@ snapshots:
       picomatch: 4.0.4
       tiny-invariant: 1.3.3
       tinyglobby: 0.2.15
-      vite: 8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.3)
+      vite: 8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.1)(esbuild@0.27.3)
       vscode-uri: 3.1.0
     optionalDependencies:
       eslint: 10.1.0
       optionator: 0.9.4
       typescript: 6.0.2
 
-  vite-plugin-eslint2@5.1.0(eslint@10.1.0)(rolldown@1.0.0-rc.12(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1))(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.3)):
+  vite-plugin-eslint2@5.1.0(eslint@10.1.0)(rolldown@1.0.0-rc.12(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1))(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.1)(esbuild@0.27.3)):
     dependencies:
       '@rollup/pluginutils': 5.3.0
       debug: 4.4.3
       eslint: 10.1.0
-      vite: 8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.3)
+      vite: 8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.1)(esbuild@0.27.3)
     optionalDependencies:
       rolldown: 1.0.0-rc.12(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)
     transitivePeerDependencies:
       - supports-color
 
-  vite-plugin-static-copy@4.0.0(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.3)):
+  vite-plugin-static-copy@4.0.0(vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.1)(esbuild@0.27.3)):
     dependencies:
       chokidar: 3.6.0
       p-map: 7.0.4
       picocolors: 1.1.1
       tinyglobby: 0.2.15
-      vite: 8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.3)
+      vite: 8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.1)(esbuild@0.27.3)
 
-  vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.0)(esbuild@0.27.3):
+  vite@8.0.3(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)(@types/node@25.5.1)(esbuild@0.27.3):
     dependencies:
       lightningcss: 1.32.0
       picomatch: 4.0.4
@@ -3691,7 +3691,7 @@ snapshots:
       rolldown: 1.0.0-rc.12(@emnapi/core@1.9.1)(@emnapi/runtime@1.9.1)
       tinyglobby: 0.2.15
     optionalDependencies:
-      '@types/node': 25.5.0
+      '@types/node': 25.5.1
       esbuild: 0.27.3
       fsevents: 2.3.3
     transitivePeerDependencies:

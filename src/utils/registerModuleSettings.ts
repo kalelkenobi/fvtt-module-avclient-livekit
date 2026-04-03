@@ -132,7 +132,6 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.advancedSettingsTargetSource",
     hint: "LIVEKITAVCLIENT.advancedSettingsTargetSourceHint",
     scope: "client",
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
     default: "both",
     type: new foundry.data.fields.StringField({
@@ -162,7 +161,6 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.autoGainControl",
     hint: "LIVEKITAVCLIENT.autoGainControlHint",
     scope: "client",
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
@@ -179,7 +177,6 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.echoCancellation",
     hint: "LIVEKITAVCLIENT.echoCancellationHint",
     scope: "client",
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
@@ -196,7 +193,6 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.noiseSuppression",
     hint: "LIVEKITAVCLIENT.noiseSuppressionHint",
     scope: "client",
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
@@ -213,7 +209,6 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.voiceIsolation",
     hint: "LIVEKITAVCLIENT.voiceIsolationHint",
     scope: "client",
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
@@ -233,7 +228,6 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.audioBitRate",
     hint: "LIVEKITAVCLIENT.audioBitRateHint",
     scope: "client",
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
     default: 128,
     type: new foundry.data.fields.NumberField({
@@ -256,7 +250,6 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.dtx",
     hint: "LIVEKITAVCLIENT.dtxHint",
     scope: "client",
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
@@ -273,7 +266,6 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.red",
     hint: "LIVEKITAVCLIENT.redHint",
     scope: "client",
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
@@ -290,7 +282,6 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.videoCodec",
     hint: "LIVEKITAVCLIENT.videoCodecHint",
     scope: "client",
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
     default: "vp9",
     type: new foundry.data.fields.StringField({
@@ -318,7 +309,6 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.backupCodec",
     hint: "LIVEKITAVCLIENT.backupCodecHint",
     scope: "client",
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
     default: "vp8",
     type: new foundry.data.fields.StringField({
@@ -391,7 +381,6 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.liveKitTrace",
     hint: "LIVEKITAVCLIENT.liveKitTraceHint",
     scope: "world",
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     config: game.settings.get(MODULE_NAME, "debug") ?? false,
     default: false,
     type: new foundry.data.fields.BooleanField({ initial: false }),
@@ -418,7 +407,6 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.forceTurn",
     hint: "LIVEKITAVCLIENT.forceTurnHint",
     scope: "world",
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     config: game.settings.get(MODULE_NAME, "devMode") ?? false,
     default: false,
     type: new foundry.data.fields.BooleanField({ initial: false }),
