@@ -1,5 +1,9 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.6.8k
+
+- refactor: update action and replace deprecated syntax on workflow
+
 ## 0.6.7k
 
 - fix: correct registration order error, update documentation and AGENTS.md
