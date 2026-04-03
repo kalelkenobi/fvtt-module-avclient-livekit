@@ -25,6 +25,63 @@ export default function registerModuleSettings(): void {
     },
   });
 
+  game.settings?.register(MODULE_NAME, "autoConnect", {
+    name: "LIVEKITAVCLIENT.autoConnect",
+    hint: "LIVEKITAVCLIENT.autoConnectHint",
+    scope: "client",
+    config: true,
+    default: true,
+    type: new foundry.data.fields.BooleanField({ initial: true }),
+  });
+
+  game.settings?.register(MODULE_NAME, "displayConnectionQuality", {
+    name: "LIVEKITAVCLIENT.displayConnectionQuality",
+    hint: "LIVEKITAVCLIENT.displayConnectionQualityHint",
+    scope: "client",
+    config: true,
+    default: true,
+    type: new foundry.data.fields.BooleanField({ initial: true }),
+    onChange: () => game.webrtc?.render(),
+  });
+
+  game.settings?.register(MODULE_NAME, "liveKitConnectionSettings", {
+    name: "LIVEKITAVCLIENT.liveKitConnectionSettings",
+    hint: "LIVEKITAVCLIENT.liveKitConnectionSettingsHint",
+    scope: "world",
+    config: false,
+    default: {},
+    requiresReload: true,
+  });
+
+  game.settings?.register(MODULE_NAME, "breakoutRoomRegistry", {
+    name: "LIVEKITAVCLIENT.breakoutRoomRegistry",
+    hint: "LIVEKITAVCLIENT.breakoutRoomRegistryHint",
+    scope: "client",
+    config: false,
+    default: {},
+    requiresReload: false,
+  });
+
+  game.settings?.register(MODULE_NAME, "useExternalAV", {
+    name: "LIVEKITAVCLIENT.useExternalAV",
+    hint: "LIVEKITAVCLIENT.useExternalAVHint",
+    scope: "client",
+    config: true,
+    default: false,
+    type: new foundry.data.fields.BooleanField({ initial: false }),
+    requiresReload: true,
+  });
+
+  game.settings?.register(MODULE_NAME, "advancedSettingsMode", {
+    name: "LIVEKITAVCLIENT.advancedSettingsMode",
+    hint: "LIVEKITAVCLIENT.advancedSettingsModeHint",
+    scope: "client",
+    config: true,
+    default: false,
+    type: new foundry.data.fields.BooleanField({ initial: false }),
+    requiresReload: true,
+  });
+
   // Gain controls for mixed audio sources (visible only in advanced mode with secondary source enabled)
   const showGainControls =
     (game.settings?.get(MODULE_NAME, "advancedSettingsMode") ?? false) &&
@@ -69,63 +126,6 @@ export default function registerModuleSettings(): void {
       const value = game.settings.get(MODULE_NAME, "secondaryAudioGain") ?? 100;
       game.webrtc?.client._liveKitClient.trackManager.setSecondaryGain(value);
     },
-  });
-
-  game.settings?.register(MODULE_NAME, "autoConnect", {
-    name: "LIVEKITAVCLIENT.autoConnect",
-    hint: "LIVEKITAVCLIENT.autoConnectHint",
-    scope: "client",
-    config: true,
-    default: true,
-    type: new foundry.data.fields.BooleanField({ initial: true }),
-  });
-
-  game.settings?.register(MODULE_NAME, "displayConnectionQuality", {
-    name: "LIVEKITAVCLIENT.displayConnectionQuality",
-    hint: "LIVEKITAVCLIENT.displayConnectionQualityHint",
-    scope: "client",
-    config: true,
-    default: true,
-    type: new foundry.data.fields.BooleanField({ initial: true }),
-    onChange: () => game.webrtc?.render(),
-  });
-
-  game.settings?.register(MODULE_NAME, "liveKitConnectionSettings", {
-    name: "LIVEKITAVCLIENT.liveKitConnectionSettings",
-    hint: "LIVEKITAVCLIENT.liveKitConnectionSettingsHint",
-    scope: "world",
-    config: false,
-    default: {},
-    requiresReload: true,
-  });
-
-  game.settings?.register(MODULE_NAME, "breakoutRoomRegistry", {
-    name: "LIVEKITAVCLIENT.breakoutRoomRegistry",
-    hint: "LIVEKITAVCLIENT.breakoutRoomRegistryHint",
-    scope: "client",
-    config: false,
-    default: {},
-    requiresReload: false,
-  });
-
-  game.settings?.register(MODULE_NAME, "advancedSettingsMode", {
-    name: "LIVEKITAVCLIENT.advancedSettingsMode",
-    hint: "LIVEKITAVCLIENT.advancedSettingsModeHint",
-    scope: "client",
-    config: true,
-    default: false,
-    type: new foundry.data.fields.BooleanField({ initial: false }),
-    requiresReload: true,
-  });
-
-  game.settings?.register(MODULE_NAME, "useExternalAV", {
-    name: "LIVEKITAVCLIENT.useExternalAV",
-    hint: "LIVEKITAVCLIENT.useExternalAVHint",
-    scope: "client",
-    config: true,
-    default: false,
-    type: new foundry.data.fields.BooleanField({ initial: false }),
-    requiresReload: true,
   });
 
   game.settings?.register(MODULE_NAME, "advancedSettingsTargetSource", {

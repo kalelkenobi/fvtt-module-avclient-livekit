@@ -28,9 +28,9 @@ graph TD
 
 The module bootstraps through two files:
 
-| File | Purpose |
-|------|---------|
-| `avclient-livekit.js` | Dev-server shim — sets `window.global` and imports the TS entry point |
+| File                      | Purpose                                                                                 |
+| ------------------------- | --------------------------------------------------------------------------------------- |
+| `avclient-livekit.js`     | Dev-server shim — sets `window.global` and imports the TS entry point                   |
 | `src/avclient-livekit.ts` | Production entry — imports hooks and sets `CONFIG.WebRTC.clientClass = LiveKitAVClient` |
 
 The entry point does two things:
@@ -67,7 +67,7 @@ The entry point does two things:
 
 ### `LiveKitClient` (`src/LiveKitClient.ts`)
 
-**Role:** The core LiveKit orchestrator. Manages the LiveKit `Room` object, handles room and participant lifecycles, and coordinates the Sub-Managers.
+**Role:** The core LiveKit orchestrator. Manages the LiveKit `Room` object, handles room and participant lifecycles, and coordinates the specialized managers.
 
 **Key responsibilities:**
 
@@ -75,6 +75,21 @@ The entry point does two things:
 - **Participant handling:** `addAllParticipants()`, `onParticipantConnected()`, `onParticipantDisconnected()`, `getParticipantFVTTUser()`
 - **Event handling:** `onConnected()`, `onDisconnected()`, `onReconnecting()`, `onReconnected()`
 - **Socket events:** `onSocketEvent()` — handles breakout, connect, disconnect, and render commands
+- **Manager coordination:** Exposes `trackManager` and `uiManager` for direct access by callers
+
+**Architecture note:** `LiveKitClient` follows a composition pattern with specialized managers. Callers access track and UI functionality directly through the manager instances. For example:
+
+```typescript
+// Track operations - access via trackManager
+game.webrtc.client._liveKitClient.trackManager.changeAudioSource();
+game.webrtc.client._liveKitClient.trackManager.getUserAudioTrack(userId);
+
+// UI operations - access via uiManager
+game.webrtc.client._liveKitClient.uiManager.onRenderCameraViews(
+  cameraViews,
+  element,
+);
+```
 
 **Initialization state machine:**
 
@@ -120,10 +135,10 @@ stateDiagram-v2
 
 **Templates used:**
 
-| Template | Purpose |
-|----------|---------|
-| `templates/server.hbs` | Server configuration: custom URL/API key/secret fields |
-| `templates/livekit.hbs` | Module-specific settings rendered as form groups |
+| Template                | Purpose                                                |
+| ----------------------- | ------------------------------------------------------ |
+| `templates/server.hbs`  | Server configuration: custom URL/API key/secret fields |
+| `templates/livekit.hbs` | Module-specific settings rendered as form groups       |
 
 ---
 
@@ -133,15 +148,15 @@ stateDiagram-v2
 
 **Key functions:**
 
-| Function | Purpose |
-|----------|---------|
-| `getBreakoutRoom(userId)` | Retrieve a user's current breakout room ID |
-| `setBreakoutRoom(userId, breakoutRoom?)` | Store a breakout room assignment in module settings |
-| `addContextOptions(contextOptions, liveKitClient)` | Add right-click context menu entries to the Players list |
-| `breakout(breakoutRoom, liveKitClient)` | Switch the current user to a different breakout room |
-| `_startBreakout(userId, breakoutRoom)` | GM-only: assign a user to a breakout room and notify via socket |
-| `_endUserBreakout(userId)` | GM-only: remove a user from their breakout room |
-| `_endAllBreakouts(liveKitClient)` | GM-only: end all active breakout rooms |
+| Function                                           | Purpose                                                         |
+| -------------------------------------------------- | --------------------------------------------------------------- |
+| `getBreakoutRoom(userId)`                          | Retrieve a user's current breakout room ID                      |
+| `setBreakoutRoom(userId, breakoutRoom?)`           | Store a breakout room assignment in module settings             |
+| `addContextOptions(contextOptions, liveKitClient)` | Add right-click context menu entries to the Players list        |
+| `breakout(breakoutRoom, liveKitClient)`            | Switch the current user to a different breakout room            |
+| `_startBreakout(userId, breakoutRoom)`             | GM-only: assign a user to a breakout room and notify via socket |
+| `_endUserBreakout(userId)`                         | GM-only: remove a user from their breakout room                 |
+| `_endAllBreakouts(liveKitClient)`                  | GM-only: end all active breakout rooms                          |
 
 **Context menu options added:**
 
@@ -162,59 +177,59 @@ Breakout rooms work by reconnecting to the LiveKit server with a different room 
 
 Provides JWT token generation for LiveKit server authentication.
 
-| Function | Description |
-|----------|-------------|
+| Function           | Description                                                                            |
+| ------------------ | -------------------------------------------------------------------------------------- |
 | `getAccessToken()` | Creates a JWT locally using the `jose` library, signed with the configured API secret. |
 
 ### `utils/hooks.ts`
 
 Registers all FoundryVTT hooks:
 
-| Hook | Action |
-|------|--------|
-| `init` | Overrides voice modes (removes Activity Detection), registers module settings |
-| `ready` | Sets up socket listener for inter-client messages, overrides the WebRTC settings menu with `LiveKitAVConfig` |
-| `renderCameraViews` | Delegates to `LiveKitClient.onRenderCameraViews()` to inject custom UI elements |
-| `getUserContextOptions` | Delegates to `LiveKitClient.onGetUserContextOptions()` to add breakout room options |
+| Hook                    | Action                                                                                                       |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `init`                  | Overrides voice modes (removes Activity Detection), registers module settings                                |
+| `ready`                 | Sets up socket listener for inter-client messages, overrides the WebRTC settings menu with `LiveKitAVConfig` |
+| `renderCameraViews`     | Delegates to `liveKitClient.uiManager.onRenderCameraViews()` to inject custom UI elements                    |
+| `getUserContextOptions` | Delegates to `liveKitClient.uiManager.onGetUserContextOptions()` to add breakout room options                |
 
 ### `utils/registerModuleSettings.ts`
 
 Registers all module settings with Foundry's settings API:
 
-| Setting Key | Scope | Description |
-|------------|-------|-------------|
-| `displayConnectionQuality` | client | Show connection quality indicator dots |
-| `liveKitConnectionSettings` | world | Server configuration parameters |
-| `breakoutRoomRegistry` | client | Current breakout room assignments |
-| `audioMusicMode` | client | Tune audio for music streaming |
-| `useExternalAV` | client | Open A/V in a separate browser window |
-| `resetRoom` | world | Generate a new room ID (GM-only trigger) |
-| `debug` | world | Enable debug-level logging |
-| `liveKitTrace` | world | Enable LiveKit SDK trace-level logging |
-| `devMode` | world | Expose developer-only settings |
-| `forceTurn` | world | Force TURN relay (dev mode only) |
+| Setting Key                 | Scope  | Description                              |
+| --------------------------- | ------ | ---------------------------------------- |
+| `displayConnectionQuality`  | client | Show connection quality indicator dots   |
+| `liveKitConnectionSettings` | world  | Server configuration parameters          |
+| `breakoutRoomRegistry`      | client | Current breakout room assignments        |
+| `audioMusicMode`            | client | Tune audio for music streaming           |
+| `useExternalAV`             | client | Open A/V in a separate browser window    |
+| `resetRoom`                 | world  | Generate a new room ID (GM-only trigger) |
+| `debug`                     | world  | Enable debug-level logging               |
+| `liveKitTrace`              | world  | Enable LiveKit SDK trace-level logging   |
+| `devMode`                   | world  | Expose developer-only settings           |
+| `forceTurn`                 | world  | Force TURN relay (dev mode only)         |
 
 ### `utils/constants.ts`
 
 Module-wide constants:
 
-| Constant | Value |
-|----------|-------|
+| Constant      | Value                |
+| ------------- | -------------------- |
 | `MODULE_NAME` | `"avclient-livekit"` |
-| `LANG_NAME` | `"LIVEKITAVCLIENT"` |
+| `LANG_NAME`   | `"LIVEKITAVCLIENT"`  |
 
 ### `utils/helpers.ts`
 
 General-purpose utilities:
 
-| Export | Description |
-|--------|-------------|
-| `delayReload()` | Debounced (100ms) page reload |
-| `debounceRender()` | Debounced (200ms) WebRTC render |
-| `debounceRefreshView(userId)` | Debounced (200ms) per-user camera view refresh |
-| `sleep(delay)` | Promise-based delay |
-| `callWhenReady(fn)` | Execute immediately if game is ready, otherwise hook on `ready` |
-| `deviceInfoToObject(list, kind)` | Convert device list to `{id: label}` map |
+| Export                           | Description                                                     |
+| -------------------------------- | --------------------------------------------------------------- |
+| `delayReload()`                  | Debounced (100ms) page reload                                   |
+| `debounceRender()`               | Debounced (200ms) WebRTC render                                 |
+| `debounceRefreshView(userId)`    | Debounced (200ms) per-user camera view refresh                  |
+| `sleep(delay)`                   | Promise-based delay                                             |
+| `callWhenReady(fn)`              | Execute immediately if game is ready, otherwise hook on `ready` |
+| `deviceInfoToObject(list, kind)` | Convert device list to `{id: label}` map                        |
 
 ### `utils/logger.ts`
 
@@ -262,12 +277,12 @@ sequenceDiagram
 
 The module uses Foundry's socket system (`module.avclient-livekit`) for coordinating between clients:
 
-| Action | Direction | Purpose |
-|--------|-----------|---------|
-| `breakout` | GM → Player | Assign/remove a player to/from a breakout room |
-| `connect` | Any → All | Command all clients to reconnect |
-| `disconnect` | Any → All | Command all clients to disconnect |
-| `render` | Any → All | Command all clients to re-render camera views |
+| Action       | Direction   | Purpose                                        |
+| ------------ | ----------- | ---------------------------------------------- |
+| `breakout`   | GM → Player | Assign/remove a player to/from a breakout room |
+| `connect`    | Any → All   | Command all clients to reconnect               |
+| `disconnect` | Any → All   | Command all clients to disconnect              |
+| `render`     | Any → All   | Command all clients to re-render camera views  |
 
 ---
 

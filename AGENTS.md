@@ -201,3 +201,31 @@ const debouncedFn = foundry.utils.debounce(() => {
 - `docs/ARCHITECTURE.md` - Detailed architecture, data flow diagrams, module internals
 - `docs/CONTRIBUTING.md` - Development setup, debugging, release process
 - `docs/API.md` - Public API documentation
+
+## Documentation Maintenance
+
+**Keep documentation in sync with code changes.** When making changes that affect:
+
+- **Architecture** (new classes, changed responsibilities, removed components) → Update `docs/ARCHITECTURE.md`
+- **Public API** (new methods, changed signatures, removed methods) → Update `docs/API.md`
+- **Development workflow** (new commands, changed build process) → Update `docs/CONTRIBUTING.md`
+- **Module settings** (new settings, changed defaults) → Update `docs/ARCHITECTURE.md` settings table and `docs/API.md` settings section
+
+### What to Update
+
+| Change Type                    | Files to Update                                          |
+| ------------------------------ | -------------------------------------------------------- |
+| New/removed class              | `AGENTS.md` (Core Classes table), `docs/ARCHITECTURE.md` |
+| New/removed utility            | `AGENTS.md` (Utilities table), `docs/ARCHITECTURE.md`    |
+| Changed class responsibilities | `docs/ARCHITECTURE.md`                                   |
+| New/removed public method      | `docs/API.md`                                            |
+| New/removed hook               | `docs/API.md`, `docs/ARCHITECTURE.md`                    |
+| New/removed setting            | `docs/ARCHITECTURE.md`, `docs/API.md`                    |
+| Changed build/dev commands     | `AGENTS.md`, `docs/CONTRIBUTING.md`                      |
+
+### Documentation Style
+
+- Use tables for listing properties, methods, settings
+- Include code examples for non-obvious usage patterns
+- Keep descriptions concise but complete
+- Update Mermaid diagrams if data flow changes
