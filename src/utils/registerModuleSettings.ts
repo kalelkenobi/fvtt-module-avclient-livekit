@@ -1,5 +1,6 @@
 import { MODULE_NAME } from "./constants";
 import { Logger } from "./logger";
+import { buildRoomName } from "./helpers";
 import debug from "debug";
 
 const log = new Logger();
@@ -132,7 +133,7 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.advancedSettingsTargetSource",
     hint: "LIVEKITAVCLIENT.advancedSettingsTargetSourceHint",
     scope: "client",
-    config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
+    config: game.settings.get(MODULE_NAME, "advancedSettingsMode"),
     default: "both",
     type: new foundry.data.fields.StringField({
       required: true,
@@ -161,7 +162,7 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.autoGainControl",
     hint: "LIVEKITAVCLIENT.autoGainControlHint",
     scope: "client",
-    config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
+    config: game.settings.get(MODULE_NAME, "advancedSettingsMode"),
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
     onChange: () => {
@@ -177,7 +178,7 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.echoCancellation",
     hint: "LIVEKITAVCLIENT.echoCancellationHint",
     scope: "client",
-    config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
+    config: game.settings.get(MODULE_NAME, "advancedSettingsMode"),
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
     onChange: () => {
@@ -193,7 +194,7 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.noiseSuppression",
     hint: "LIVEKITAVCLIENT.noiseSuppressionHint",
     scope: "client",
-    config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
+    config: game.settings.get(MODULE_NAME, "advancedSettingsMode"),
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
     onChange: () => {
@@ -209,7 +210,7 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.voiceIsolation",
     hint: "LIVEKITAVCLIENT.voiceIsolationHint",
     scope: "client",
-    config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
+    config: game.settings.get(MODULE_NAME, "advancedSettingsMode"),
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
     onChange: () => {
@@ -228,7 +229,7 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.audioBitRate",
     hint: "LIVEKITAVCLIENT.audioBitRateHint",
     scope: "client",
-    config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
+    config: game.settings.get(MODULE_NAME, "advancedSettingsMode"),
     default: 128,
     type: new foundry.data.fields.NumberField({
       initial: 128,
@@ -250,7 +251,7 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.dtx",
     hint: "LIVEKITAVCLIENT.dtxHint",
     scope: "client",
-    config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
+    config: game.settings.get(MODULE_NAME, "advancedSettingsMode"),
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
     onChange: () => {
@@ -266,7 +267,7 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.red",
     hint: "LIVEKITAVCLIENT.redHint",
     scope: "client",
-    config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
+    config: game.settings.get(MODULE_NAME, "advancedSettingsMode"),
     default: true,
     type: new foundry.data.fields.BooleanField({ initial: true }),
     onChange: () => {
@@ -282,7 +283,7 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.videoCodec",
     hint: "LIVEKITAVCLIENT.videoCodecHint",
     scope: "client",
-    config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
+    config: game.settings.get(MODULE_NAME, "advancedSettingsMode"),
     default: "vp9",
     type: new foundry.data.fields.StringField({
       required: true,
@@ -309,7 +310,7 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.backupCodec",
     hint: "LIVEKITAVCLIENT.backupCodecHint",
     scope: "client",
-    config: game.settings.get(MODULE_NAME, "advancedSettingsMode") ?? false,
+    config: game.settings.get(MODULE_NAME, "advancedSettingsMode"),
     default: "vp8",
     type: new foundry.data.fields.StringField({
       required: true,
@@ -346,7 +347,7 @@ export default function registerModuleSettings(): void {
               MODULE_NAME,
               "liveKitConnectionSettings",
             );
-            liveKitConnectionSettings.room = foundry.utils.randomID(32);
+            liveKitConnectionSettings.room = buildRoomName();
             game.settings
               .set(
                 MODULE_NAME,
@@ -365,6 +366,57 @@ export default function registerModuleSettings(): void {
     requiresReload: true,
   });
 
+  // Recorder service settings (GM-only visibility)
+  const isGM = game.user?.isGM ?? false;
+
+  game.settings?.register(MODULE_NAME, "recorderUrl", {
+    name: "LIVEKITAVCLIENT.recorderUrl",
+    hint: "LIVEKITAVCLIENT.recorderUrlHint",
+    scope: "world",
+    config: isGM,
+    default: "",
+    type: new foundry.data.fields.StringField({
+      required: true,
+      blank: true,
+      initial: "",
+    }),
+    onChange: () => {
+      game.webrtc?.client._liveKitClient.recorder
+        .reconfigure()
+        .catch((error: unknown) => {
+          log.error("recorderUrl: Error reconfiguring recorder", error);
+        });
+    },
+  });
+
+  game.settings?.register(MODULE_NAME, "recorderApiToken", {
+    name: "LIVEKITAVCLIENT.recorderApiToken",
+    hint: "LIVEKITAVCLIENT.recorderApiTokenHint",
+    scope: "world",
+    config: isGM,
+    default: "",
+    type: new foundry.data.fields.StringField({
+      required: true,
+      blank: true,
+      initial: "",
+    }),
+    onChange: () => {
+      game.webrtc?.client._liveKitClient.recorder
+        .reconfigure()
+        .catch((error: unknown) => {
+          log.error("recorderApiToken: Error reconfiguring recorder", error);
+        });
+    },
+  });
+
+  // Persisted camera dock size (per-user)
+  game.settings?.register(MODULE_NAME, "cameraDockSize", {
+    name: "cameraDockSize",
+    scope: "client",
+    config: false,
+    default: {},
+  });
+
   // Register debug logging setting
   game.settings?.register(MODULE_NAME, "debug", {
     name: "LIVEKITAVCLIENT.debug",
@@ -381,7 +433,7 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.liveKitTrace",
     hint: "LIVEKITAVCLIENT.liveKitTraceHint",
     scope: "world",
-    config: game.settings.get(MODULE_NAME, "debug") ?? false,
+    config: game.settings.get(MODULE_NAME, "debug"),
     default: false,
     type: new foundry.data.fields.BooleanField({ initial: false }),
     requiresReload: true,
@@ -407,7 +459,7 @@ export default function registerModuleSettings(): void {
     name: "LIVEKITAVCLIENT.forceTurn",
     hint: "LIVEKITAVCLIENT.forceTurnHint",
     scope: "world",
-    config: game.settings.get(MODULE_NAME, "devMode") ?? false,
+    config: game.settings.get(MODULE_NAME, "devMode"),
     default: false,
     type: new foundry.data.fields.BooleanField({ initial: false }),
     requiresReload: true,

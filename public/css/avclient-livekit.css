@@ -10,6 +10,26 @@
   pointer-events: none;
 }
 
+/* Recorder controls */
+.camera-view .av-control.livekit-control.record {
+  color: #d33;
+}
+
+.camera-view .av-control.livekit-control.record.recording {
+  animation: livekit-record-flash 1s infinite ease-in-out;
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.camera-view .av-control.livekit-control.record-stop {
+  color: #d33;
+}
+
+@keyframes livekit-record-flash {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
 .camera-view .connection-quality-indicator {
   height: 12px;
   width: 12px;

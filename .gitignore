@@ -4,6 +4,8 @@ node_modules/
 .DS_Store
 .eslintcache
 .vscode/
+.pnpm-store/
+.opencode/
 
 # Yarn 3 ignores
 .pnp.*

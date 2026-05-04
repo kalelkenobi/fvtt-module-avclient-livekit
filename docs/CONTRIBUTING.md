@@ -101,6 +101,7 @@ fvtt-module-avclient-livekit/
 │   ├── LiveKitTrackManager.ts  # Media stream integration
 │   ├── LiveKitUIManager.ts     # DOM injection integration
 │   ├── LiveKitAVConfig.ts      # Custom settings UI
+│   ├── LiveKitRecorder.ts      # Recorder integration
 │   ├── LiveKitBreakout.ts      # Breakout room functionality
 │   └── utils/                  # Utility modules
 │       ├── auth.ts             # JWT token generation
@@ -231,3 +232,26 @@ The project uses a GitHub Actions workflow for releases. The CI pipeline builds 
 - **Localization:** All user-facing strings must use the `LIVEKITAVCLIENT.*` namespace and be added to all language files.
 - **Error handling:** Catch and log errors using the `Logger` class. Don't swallow errors silently.
 - **Debouncing:** Use the debounce helpers from `utils/helpers.ts` for UI-related operations.
+
+---
+
+## Recorder QA Checklist
+
+The recorder integration requires a running `livekit-recorder` FastAPI instance for end-to-end testing. The recorder service must be configured in Foundry module settings (GM-only) with the correct URL and API token. The recorder server must have CORS configured to allow requests from the Foundry origin.
+
+### Manual QA Steps
+
+1. **Recorder unconfigured** → no record button appears in camera dock.
+2. **Recorder configured, non-GM user** → no record button visible.
+3. **Recorder configured, GM** → record button visible.
+4. **Click record** → button flashes + disabled, stop button appears, session created on server.
+5. **Refresh while recording** → on reconnect, UI resumes recording state.
+6. **Reset Room** while no recording → succeeds, new room id has format `[worldId]_[uuid]`.
+7. **Stop → Save** → wait for packaging → WAV download dialog appears → download succeeds.
+8. **Stop → Delete** → session deleted on server, UI returns to idle.
+9. **Stop → Cancel** → recording continues.
+10. **After download** → choose "Delete from server" → DELETE succeeds.
+11. **Drag dock taller** → refresh → dock retains height.
+12. **Switch dock vertical→horizontal** → resize → refresh → correct axis preserved.
+13. **Breakout flow** still works (room name change does not break breakouts).
+14. **Disconnect WebSocket** (kill server briefly) → recorder reconnects with backoff.

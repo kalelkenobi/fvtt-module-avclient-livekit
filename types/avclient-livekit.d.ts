@@ -35,6 +35,42 @@ type LiveKitSettingsConfig = SettingConfig & {
 
 type BreakoutRoomRegistry = Record<string, string | undefined>;
 
+// Persisted camera dock size (client-scoped)
+interface CameraDockSize {
+  width?: number;
+  height?: number;
+}
+
+// Recorder state machine
+type RecorderState = "idle" | "recording" | "stopping" | "packaging";
+
+// Recorder service status response
+interface RecorderRoomStatus {
+  room: string;
+  session_id: string;
+  is_active: boolean;
+  participants?: Record<
+    string,
+    { is_receiving: boolean; bytes_written: number }
+  >;
+}
+
+// Recorder service start/stop response
+interface RecorderActionResponse {
+  status: string;
+  room: string;
+  session_id: string;
+  message?: string;
+}
+
+// Recorder WebSocket event payload
+interface RecorderWsEvent {
+  event: "recording_started" | "recording_stopped" | "packaging_complete";
+  session_id: string;
+  room: string;
+  reason?: string;
+}
+
 /**
  * Global settings
  */
@@ -131,5 +167,16 @@ declare global {
       step: 5;
       integer: true;
     }>;
+    "avclient-livekit.recorderUrl": foundry.data.fields.StringField<{
+      required: true;
+      blank: true;
+      initial: "";
+    }>;
+    "avclient-livekit.recorderApiToken": foundry.data.fields.StringField<{
+      required: true;
+      blank: true;
+      initial: "";
+    }>;
+    "avclient-livekit.cameraDockSize": CameraDockSize;
   }
 }

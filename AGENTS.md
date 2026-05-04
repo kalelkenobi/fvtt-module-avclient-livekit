@@ -44,6 +44,7 @@ just reset              # Deep clean + pnpm install
 | `LiveKitTrackManager` | `LiveKitTrackManager.ts` | Media streams (local/remote tracks, mixing, screen share)               |
 | `LiveKitUIManager`    | `LiveKitUIManager.ts`    | DOM injection (connection quality indicators, volume sliders)           |
 | `LiveKitAVConfig`     | `LiveKitAVConfig.ts`     | Custom A/V settings UI                                                  |
+| `LiveKitRecorder`     | `LiveKitRecorder.ts`     | Remote livekit-recorder integration (HTTP + WebSocket)                    |
 | `LiveKitBreakout`     | `LiveKitBreakout.ts`     | Breakout room functionality                                             |
 
 ### Utilities (`src/utils/`)
@@ -53,7 +54,7 @@ just reset              # Deep clean + pnpm install
 | `auth.ts`                   | JWT token generation using `jose` library                                          |
 | `hooks.ts`                  | Foundry hook registrations (init, ready, renderCameraViews, getUserContextOptions) |
 | `logger.ts`                 | Namespaced logging wrapper using `debug` library                                   |
-| `helpers.ts`                | Debounce utilities: `delayReload()`, `debounceRefreshView()`, `callWhenReady()`    |
+| `helpers.ts`                | `buildRoomName()`, `formatRecorderTimestamp()`, debounce helpers (`delayReload()`, `debounceRefreshView()`, `callWhenReady()`) |
 | `registerModuleSettings.ts` | Module settings registration                                                       |
 | `constants.ts`              | `MODULE_NAME = "avclient-livekit"`, `LANG_NAME = "LIVEKITAVCLIENT"`                |
 
@@ -63,7 +64,23 @@ just reset              # Deep clean + pnpm install
 
 - `LiveKitConnectionSettings` interface
 - `SocketMessage` interface
+- `CameraDockSize`, `RecorderState`, `RecorderRoomStatus`, `RecorderActionResponse`, `RecorderWsEvent` types
 - Global augmentations for `SettingConfig`
+
+### Recorder Integration
+
+`LiveKitRecorder` is composed onto `LiveKitClient` (accessed via `game.webrtc.client._liveKitClient.recorder`):
+
+- **Settings:** `recorderUrl` and `recorderApiToken` (world-scoped, GM-only via conditional `config: game.user?.isGM`)
+- **State machine:** `idle` → `recording` → `stopping` → `packaging` → `idle`
+- **WebSocket:** Long-lived connection for real-time state updates (`recording_started`, `recording_stopped`, `packaging_complete`), with exponential backoff reconnection (1s–30s)
+- **HTTP API:** `start`, `stop`, `delete`, `status`, and `download` (WAV/ZIP) via auth headers
+- **No polling fallback:** All state flows through the WebSocket; packaging completion resolves via a promise-based waiter (`awaitPackaging`)
+- **UI:** Record/stop buttons injected into the GM's camera dock; stop prompt offers Save/Delete/Cancel; download prompt offers WAV/ZIP/Close + optional delete-after-download
+- **Room name format:** `[worldId]_[randomID(32)]` — used consistently across connect and reset flows
+- **Camera dock size persistence:** Per-user `{ width?, height? }` stored in `cameraDockSize` client setting, restored on re-render via `ResizeObserver`
+
+**Testing:** No test framework. Validation is via TypeScript compilation, ESLint, and manual QA (checklist in `docs/CONTRIBUTING.md`).
 
 ## Code Style Guidelines
 

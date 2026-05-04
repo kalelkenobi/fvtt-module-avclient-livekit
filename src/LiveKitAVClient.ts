@@ -10,7 +10,7 @@ import {
 import { LANG_NAME, MODULE_NAME } from "./utils/constants";
 
 import LiveKitClient, { InitState } from "./LiveKitClient";
-import { callWhenReady, delayReload } from "./utils/helpers";
+import { buildRoomName, callWhenReady, delayReload } from "./utils/helpers";
 import { LiveKitConnectionSettings } from "../types/avclient-livekit";
 import LiveKitAVConfig from "./LiveKitAVConfig";
 import { Logger } from "./utils/logger";
@@ -215,8 +215,8 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
 
     // Set a room name if one doesn't yet exist
     if (!liveKitConnectionSettings.room) {
-      log.warn("No meeting room set, creating random name.");
-      liveKitConnectionSettings.room = foundry.utils.randomID(32);
+      log.warn("No meeting room set, creating one based on the world id.");
+      liveKitConnectionSettings.room = buildRoomName();
       callWhenReady(() => {
         game.settings
           ?.set(
@@ -364,6 +364,14 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
     // Set up after connection
     await this._liveKitClient.onConnected();
 
+    // GM-only: connect to the recorder service (if configured) so the
+    // record/stop controls in the camera dock reflect remote state.
+    if (game.user.isGM) {
+      this._liveKitClient.recorder.init().catch((error: unknown) => {
+        log.error("Error initialising recorder integration:", error);
+      });
+    }
+
     this._liveKitClient.connectionState = ConnectionState.Connected;
     return true;
   }
@@ -383,6 +391,8 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
       this._liveKitClient.liveKitRoom &&
       this._liveKitClient.liveKitRoom.state !== ConnectionState.Disconnected
     ) {
+      // Tear down the recorder integration before leaving the room
+      this._liveKitClient.recorder.dispose();
       // Disconnect from the room, but don't stop tracks in case we are reconnecting again soon
       await this._liveKitClient.liveKitRoom.disconnect(false);
       this._liveKitClient.connectionState = ConnectionState.Disconnected;

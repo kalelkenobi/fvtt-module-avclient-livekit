@@ -3,15 +3,30 @@ import { LANG_NAME, MODULE_NAME } from "./utils/constants";
 import { addContextOptions } from "./LiveKitBreakout";
 import { Logger } from "./utils/logger";
 import type LiveKitClient from "./LiveKitClient";
+import type {
+  CameraDockSize,
+  RecorderState,
+} from "../types/avclient-livekit";
 
 const log = new Logger();
+
+const DOCK_MIN_WIDTH = 250;
+const DOCK_MIN_HEIGHT = 175;
 
 export default class LiveKitUIManager {
   client: LiveKitClient;
   windowClickListener: EventListener | null = null;
 
+  private dockObserver: ResizeObserver | null = null;
+  private observedDockElement: HTMLElement | null = null;
+  private readonly persistDockSize: () => void;
+
   constructor(client: LiveKitClient) {
     this.client = client;
+    this.persistDockSize = foundry.utils.debounce(
+      this.savePersistedDockSize.bind(this),
+      500,
+    );
   }
 
   addConnectionButtons(element: HTMLElement): void {
@@ -62,6 +77,272 @@ export default class LiveKitUIManager {
     } else {
       connectButton.classList.toggle("hidden", false);
     }
+
+    // Add recorder controls (GM-only, only when configured)
+    this.addRecorderButtons(element);
+  }
+
+  /**
+   * Inject the record/stop buttons into the local user's camera dock. The
+   * buttons are only shown to GMs while the recorder service is configured.
+   */
+  addRecorderButtons(element: HTMLElement): void {
+    if (this.client.useExternalAV) return;
+    if (!game.user?.isGM) return;
+    if (!this.client.recorder.isConfigured()) return;
+
+    const recordButton = document.createElement("button");
+    recordButton.type = "button";
+    recordButton.className =
+      "av-control inline-control toggle icon fa-solid fa-fw fa-circle livekit-control record";
+    recordButton.dataset.tooltip = "";
+    recordButton.ariaLabel =
+      game.i18n.localize(`${LANG_NAME}.recordStart`);
+    recordButton.addEventListener("click", () => {
+      this.onRecordClick().catch((error: unknown) => {
+        log.error("Error starting recording:", error);
+      });
+    });
+    element.before(recordButton);
+
+    const stopButton = document.createElement("button");
+    stopButton.type = "button";
+    stopButton.className =
+      "av-control inline-control toggle icon fa-solid fa-fw fa-stop livekit-control record-stop hidden";
+    stopButton.dataset.tooltip = "";
+    stopButton.ariaLabel =
+      game.i18n.localize(`${LANG_NAME}.recordStop`);
+    stopButton.addEventListener("click", () => {
+      this.onStopClick().catch((error: unknown) => {
+        log.error("Error stopping recording:", error);
+      });
+    });
+    element.before(stopButton);
+
+    // Sync state for any active recording the GM may be resuming
+    this.setRecordButtonState(
+      this.client.recorder.state,
+      this.client.recorder.activeSessionId,
+    );
+  }
+
+  private async onRecordClick(): Promise<void> {
+    if (!this.client.recorder.isConfigured()) {
+      ui.notifications?.warn(
+        game.i18n?.localize(`${LANG_NAME}.recorderNotConfigured`) ??
+          "Recorder service is not configured.",
+      );
+      return;
+    }
+    try {
+      await this.client.recorder.startRecording();
+    } catch (error) {
+      log.error("Could not start recording:", error);
+      ui.notifications?.error(
+        game.i18n?.localize(`${LANG_NAME}.recorderErrorStart`) ??
+          "Could not start recording.",
+      );
+    }
+  }
+
+  private async onStopClick(): Promise<void> {
+    const sessionId = this.client.recorder.activeSessionId;
+    if (!sessionId) {
+      log.warn("Stop clicked without an active session id");
+      return;
+    }
+    const choice = await this.promptStopChoice();
+    if (choice === "cancel") return;
+    if (choice === "delete") {
+      try {
+        await this.client.recorder.stopRecording();
+        await this.client.recorder.deleteRecording(sessionId);
+      } catch (error) {
+        log.error("Error during stop+delete flow:", error);
+        ui.notifications?.error(
+          game.i18n?.localize(`${LANG_NAME}.recorderErrorStop`) ??
+            "Could not stop recording.",
+        );
+      }
+      return;
+    }
+    // choice === "save"
+    try {
+      const packagingDone = this.client.recorder.awaitPackaging(sessionId);
+      await this.client.recorder.stopRecording();
+      ui.notifications?.info(
+        game.i18n?.localize(`${LANG_NAME}.packagingInProgress`) ??
+          "Packaging in progress, please wait…",
+      );
+      await packagingDone;
+      await this.promptDownload(sessionId);
+    } catch (error) {
+      log.error("Error during stop+save flow:", error);
+      ui.notifications?.error(
+        game.i18n?.localize(`${LANG_NAME}.recorderErrorStop`) ??
+          "Could not stop recording.",
+      );
+    }
+  }
+
+  private async promptStopChoice(): Promise<"save" | "delete" | "cancel"> {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      const result: unknown = await (foundry.applications.api.DialogV2 as any).wait({
+        window: { title: `${LANG_NAME}.stopDialogTitle` },
+        content: `<p>${
+          game.i18n?.localize(`${LANG_NAME}.stopDialogContent`) ??
+          "Save or delete this recording?"
+        }</p>`,
+        buttons: [
+          {
+            action: "save",
+            label: `${LANG_NAME}.stopDialogSave`,
+            icon: "fa-solid fa-floppy-disk",
+            default: true,
+            callback: () => "save",
+          },
+          {
+            action: "delete",
+            label: `${LANG_NAME}.stopDialogDelete`,
+            icon: "fa-solid fa-trash",
+            callback: () => "delete",
+          },
+          {
+            action: "cancel",
+            label: `${LANG_NAME}.stopDialogCancel`,
+            icon: "fa-solid fa-xmark",
+            callback: () => "cancel",
+          },
+        ],
+        rejectClose: false,
+      });
+      if (result === "save" || result === "delete") {
+        return result;
+      }
+      return "cancel";
+    } catch (error: unknown) {
+      log.warn("Stop dialog error or dismissed:", error);
+      return "cancel";
+    }
+  }
+
+  private async promptDownload(sessionId: string): Promise<void> {
+    const recorder = this.client.recorder;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+      const format: unknown = await (foundry.applications.api.DialogV2 as any).wait({
+        window: { title: `${LANG_NAME}.downloadDialogTitle` },
+        content: `<p>${
+          game.i18n?.localize(`${LANG_NAME}.downloadDialogContent`) ??
+          "Choose a download format:"
+        }</p>`,
+        buttons: [
+          {
+            action: "wav",
+            label: `${LANG_NAME}.downloadWav`,
+            icon: "fa-solid fa-file-audio",
+            default: true,
+            callback: async () => {
+              await recorder.downloadWav(sessionId);
+              return "wav";
+            },
+          },
+          {
+            action: "zip",
+            label: `${LANG_NAME}.downloadZip`,
+            icon: "fa-solid fa-file-zipper",
+            callback: async () => {
+              await recorder.downloadZip(sessionId);
+              return "zip";
+            },
+          },
+          {
+            action: "close",
+            label: `${LANG_NAME}.downloadClose`,
+            icon: "fa-solid fa-xmark",
+            callback: () => "close",
+          },
+        ],
+        rejectClose: false,
+      });
+
+      if (format !== "wav" && format !== "zip") return;
+
+      const shouldDelete = await foundry.applications.api.DialogV2.confirm({
+        window: { title: `${LANG_NAME}.deleteAfterDownloadTitle` },
+        content: `<p>${
+          game.i18n?.localize(`${LANG_NAME}.deleteAfterDownloadContent`) ??
+          "Delete this recording from the server?"
+        }</p>`,
+        rejectClose: false,
+      });
+      if (shouldDelete) {
+        await recorder.deleteRecording(sessionId);
+      }
+    } catch (error: unknown) {
+      log.warn("Download dialog error or cancelled:", error);
+    }
+  }
+
+  /**
+   * Update the record/stop button visibility and disabled state based on the
+   * recorder's current state. Called by `LiveKitRecorder` whenever its state
+   * changes.
+   */
+  setRecordButtonState(state: RecorderState, _sessionId: string | null): void {
+    void _sessionId;
+    const userCameraView = document.querySelector(
+      `.camera-view[data-user="${game.user?.id ?? ""}"]`,
+    );
+    if (!userCameraView) return;
+    const recordButton = userCameraView.querySelector(
+      ".livekit-control.record",
+    );
+    const stopButton = userCameraView.querySelector(
+      ".livekit-control.record-stop",
+    );
+    if (
+      !(recordButton instanceof HTMLElement) ||
+      !(stopButton instanceof HTMLElement)
+    ) {
+      return;
+    }
+
+    switch (state) {
+      case "idle":
+        recordButton.classList.remove("hidden", "disabled", "recording");
+        stopButton.classList.add("hidden");
+        stopButton.classList.remove("disabled");
+        break;
+      case "recording":
+        recordButton.classList.remove("hidden");
+        recordButton.classList.add("disabled", "recording");
+        stopButton.classList.remove("hidden", "disabled");
+        break;
+      case "stopping":
+        recordButton.classList.add("hidden");
+        stopButton.classList.remove("hidden");
+        stopButton.classList.add("disabled");
+        break;
+      case "packaging":
+        recordButton.classList.add("hidden");
+        stopButton.classList.add("hidden");
+        break;
+    }
+  }
+
+  /**
+   * Notification hook from `LiveKitRecorder` when the WAV is ready. We let
+   * users know via a UI notification; downloads are triggered explicitly via
+   * the stop -> save flow's `awaitPackaging` await.
+   */
+  onRecordingPackaged(_sessionId: string): void {
+    void _sessionId;
+    ui.notifications?.info(
+      game.i18n?.localize(`${LANG_NAME}.recordingPackaged`) ??
+        "Recording is ready for download.",
+    );
   }
 
   addConnectionQualityIndicator(userId: string): void {
@@ -154,6 +435,10 @@ export default class LiveKitUIManager {
     _cameraviews: foundry.applications.apps.av.CameraViews,
     html: HTMLElement,
   ): void {
+    // Apply persisted dock size and (idempotently) install the resize observer
+    this.applyStoredDockSize(html);
+    this.installDockResizeObserver(html);
+
     const userId = game.user?.id;
     if (!userId) {
       log.error("No user ID found; cannot render camera views");
@@ -162,8 +447,14 @@ export default class LiveKitUIManager {
     const cameraBox = html.querySelector(
       `[data-user="${userId}"].user-controls`,
     );
-    // Look for existing connection buttons
-    if (cameraBox?.querySelector(".livekit-control")) {
+    // Look for existing connection buttons (only the connect/disconnect
+    // buttons; recorder controls may be absent if recorder config changes
+    // at runtime, so we still re-run addConnectionButtons in that case)
+    if (
+      cameraBox?.querySelector(
+        ".livekit-control.connect, .livekit-control.disconnect",
+      )
+    ) {
       return;
     }
     const element = cameraBox?.querySelector('[data-action="configure"]');
@@ -172,6 +463,85 @@ export default class LiveKitUIManager {
       return;
     }
     this.addConnectionButtons(element);
+  }
+
+  /* -------------------------------------------- */
+  /*  Camera dock size persistence                */
+  /* -------------------------------------------- */
+
+  /**
+   * Read the persisted dock size and apply it to `#camera-views`. Skipped
+   * when the dock is minimized or when the stored value is below the CSS
+   * min thresholds.
+   */
+  applyStoredDockSize(html: HTMLElement): void {
+    const dock = this.findDockElement(html);
+    if (!dock || dock.classList.contains("minimized")) return;
+    const stored = (game.settings?.get(MODULE_NAME, "cameraDockSize") ??
+      {});
+    if (
+      typeof stored.width === "number" &&
+      stored.width >= DOCK_MIN_WIDTH &&
+      dock.classList.contains("vertical")
+    ) {
+      dock.style.width = `${String(stored.width)}px`;
+    }
+    if (
+      typeof stored.height === "number" &&
+      stored.height >= DOCK_MIN_HEIGHT &&
+      dock.classList.contains("horizontal")
+    ) {
+      dock.style.height = `${String(stored.height)}px`;
+    }
+  }
+
+  installDockResizeObserver(html: HTMLElement): void {
+    const dock = this.findDockElement(html);
+    if (!dock) return;
+    if (this.observedDockElement === dock && this.dockObserver) return;
+    if (this.dockObserver) {
+      this.dockObserver.disconnect();
+    }
+    this.dockObserver = new ResizeObserver(() => { this.persistDockSize(); });
+    this.dockObserver.observe(dock);
+    this.observedDockElement = dock;
+  }
+
+  disposeDockResizeObserver(): void {
+    if (this.dockObserver) {
+      this.dockObserver.disconnect();
+      this.dockObserver = null;
+    }
+    this.observedDockElement = null;
+  }
+
+  private findDockElement(html: HTMLElement): HTMLElement | null {
+    if (html.id === "camera-views") return html;
+    const found = html.querySelector("#camera-views");
+    return found instanceof HTMLElement ? found : null;
+  }
+
+  private savePersistedDockSize(): void {
+    const dock = this.observedDockElement;
+    if (!dock || dock.classList.contains("minimized")) return;
+    const next: CameraDockSize = {};
+    if (dock.classList.contains("vertical")) {
+      next.width = dock.offsetWidth;
+    }
+    if (dock.classList.contains("horizontal")) {
+      next.height = dock.offsetHeight;
+    }
+    if (next.width === undefined && next.height === undefined) return;
+    const current = (game.settings?.get(MODULE_NAME, "cameraDockSize") ??
+      {});
+    if (current.width === next.width && current.height === next.height) {
+      return;
+    }
+    game.settings
+      ?.set(MODULE_NAME, "cameraDockSize", { ...current, ...next })
+      .catch((error: unknown) => {
+        log.error("Error saving camera dock size:", error);
+      });
   }
 
   /**

@@ -77,7 +77,7 @@ The entry point does two things:
 - **Socket events:** `onSocketEvent()` — handles breakout, connect, disconnect, and render commands
 - **Manager coordination:** Exposes `trackManager` and `uiManager` for direct access by callers
 
-**Architecture note:** `LiveKitClient` follows a composition pattern with specialized managers. Callers access track and UI functionality directly through the manager instances. For example:
+**Architecture note:** `LiveKitClient` follows a composition pattern with specialized managers. Callers access track, UI, and recorder functionality directly through the manager instances. For example:
 
 ```typescript
 // Track operations - access via trackManager
@@ -121,6 +121,29 @@ stateDiagram-v2
 
 - **UI elements:** `addConnectionButtons()`, `addConnectionQualityIndicator()`, `setConnectionQualityIndicator()`, `onRenderCameraViews()`
 - **Interaction inputs:** Volume slider overrides, `onAudioPlaybackStatusChanged()`
+- **Recorder controls:** `addRecorderButtons()`, `setRecordButtonState()`, `onRecordingPackaged()`
+- **Camera dock persistence:** `applyStoredDockSize()`, `installDockResizeObserver()`, `disposeDockResizeObserver()`
+
+---
+
+### `LiveKitRecorder` (`src/LiveKitRecorder.ts`)
+
+**Role:** Integration layer for the remote livekit-recorder FastAPI service. Composed onto `LiveKitClient` and only meaningfully active for GM users.
+
+**Key responsibilities:**
+
+- **HTTP API wrappers:** `startRecording()`, `stopRecording()`, `deleteRecording()`, `checkActiveRecording()`
+- **Downloads:** `downloadWav()`, `downloadZip()` — fetch + blob, never embed token in URL
+- **WebSocket:** Long-lived authenticated connection for real-time `recording_started`, `recording_stopped`, and `packaging_complete` events
+- **Packaging waiter:** `awaitPackaging()` — promise-based, resolves when WS `packaging_complete` arrives, with timeout fallback
+
+**State machine:**
+
+```
+idle → recording → stopping → packaging → idle
+```
+
+**WebSocket reconnection:** Exponential backoff (1s, 2s, 4s, 8s, 16s, 30s). On reconnect, re-checks active recording via HTTP.
 
 ---
 
@@ -196,18 +219,21 @@ Registers all FoundryVTT hooks:
 
 Registers all module settings with Foundry's settings API:
 
-| Setting Key                 | Scope  | Description                              |
-| --------------------------- | ------ | ---------------------------------------- |
-| `displayConnectionQuality`  | client | Show connection quality indicator dots   |
-| `liveKitConnectionSettings` | world  | Server configuration parameters          |
-| `breakoutRoomRegistry`      | client | Current breakout room assignments        |
-| `audioMusicMode`            | client | Tune audio for music streaming           |
-| `useExternalAV`             | client | Open A/V in a separate browser window    |
-| `resetRoom`                 | world  | Generate a new room ID (GM-only trigger) |
-| `debug`                     | world  | Enable debug-level logging               |
-| `liveKitTrace`              | world  | Enable LiveKit SDK trace-level logging   |
-| `devMode`                   | world  | Expose developer-only settings           |
-| `forceTurn`                 | world  | Force TURN relay (dev mode only)         |
+| Setting Key                 | Scope  | Description                                    |
+| --------------------------- | ------ | ---------------------------------------------- |
+| `displayConnectionQuality`  | client | Show connection quality indicator dots         |
+| `liveKitConnectionSettings` | world  | Server configuration parameters                |
+| `breakoutRoomRegistry`      | client | Current breakout room assignments              |
+| `audioMusicMode`            | client | Tune audio for music streaming                 |
+| `useExternalAV`             | client | Open A/V in a separate browser window          |
+| `resetRoom`                 | world  | Generate a new room ID (GM-only trigger)       |
+| `recorderUrl`               | world  | Recorder service base URL (GM-only visibility) |
+| `recorderApiToken`          | world  | Recorder bearer token (GM-only visibility)     |
+| `cameraDockSize`            | client | Persisted camera dock dimensions               |
+| `debug`                     | world  | Enable debug-level logging                     |
+| `liveKitTrace`              | world  | Enable LiveKit SDK trace-level logging         |
+| `devMode`                   | world  | Expose developer-only settings                 |
+| `forceTurn`                 | world  | Force TURN relay (dev mode only)               |
 
 ### `utils/constants.ts`
 
@@ -224,6 +250,8 @@ General-purpose utilities:
 
 | Export                           | Description                                                     |
 | -------------------------------- | --------------------------------------------------------------- |
+| `buildRoomName()`                | Generate persistent room name `[worldId]_[randomID(32)]`        |
+| `formatRecorderTimestamp()`      | Generate session ID in `YYYY-MM-DD_HH:mm:ss` format             |
 | `delayReload()`                  | Debounced (100ms) page reload                                   |
 | `debounceRender()`               | Debounced (200ms) WebRTC render                                 |
 | `debounceRefreshView(userId)`    | Debounced (200ms) per-user camera view refresh                  |
@@ -243,6 +271,11 @@ Logging wrapper using the [`debug`](https://www.npmjs.com/package/debug) library
 
 - **`LiveKitConnectionSettings`** — server connection parameters and credentials
 - **`SocketMessage`** — inter-client socket message format (actions: breakout, connect, disconnect, render)
+- **`CameraDockSize`** — persisted dock dimensions `{ width?, height? }`
+- **`RecorderState`** — recorder state machine: `"idle" | "recording" | "stopping" | "packaging"`
+- **`RecorderRoomStatus`** — `{ is_active: boolean; session_id: string }`
+- **`RecorderActionResponse`** — `{ success: boolean; session_id: string }`
+- **`RecorderWsEvent`** — WebSocket event payload `{ event, room, session_id, reason? }`
 - **Global augmentations** — extends Foundry's `SettingConfig` with all module settings types
 
 ---

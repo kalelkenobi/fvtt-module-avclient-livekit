@@ -126,6 +126,7 @@ All settings are accessible via `game.settings.get("avclient-livekit", key)`.
 | `breakoutRoomRegistry`     | `object`  | `{}`    | Mapping of user IDs to breakout room IDs                                          |
 | `audioMusicMode`           | `boolean` | `false` | Optimize audio for music streaming (higher bitrate, stereo, no echo cancellation) |
 | `useExternalAV`            | `boolean` | `false` | Open A/V in a separate browser window                                             |
+| `cameraDockSize`           | `object`  | `{}`    | Persisted camera dock dimensions `{ width?, height? }`                            |
 
 ### World-Scoped Settings
 
@@ -133,6 +134,8 @@ All settings are accessible via `game.settings.get("avclient-livekit", key)`.
 | --------------------------- | --------- | ------- | --------------------------------------------------- |
 | `liveKitConnectionSettings` | `object`  | `{}`    | Server URL, room ID, API key, secret key            |
 | `resetRoom`                 | `boolean` | `false` | Trigger to generate a new meeting room ID (GM only) |
+| `recorderUrl`               | `string`  | `""`    | Recorder service base URL (GM-only visibility)      |
+| `recorderApiToken`          | `string`  | `""`    | Recorder bearer token (GM-only visibility)          |
 | `debug`                     | `boolean` | `false` | Enable debug-level logging                          |
 | `liveKitTrace`              | `boolean` | `false` | Enable LiveKit SDK trace-level logging              |
 | `devMode`                   | `boolean` | `false` | Expose developer-only settings                      |
@@ -163,6 +166,7 @@ When accessed via `game.webrtc.client._liveKitClient`:
 | `liveKitRoom`           | `Room \| undefined`     | The LiveKit Room object                    |
 | `trackManager`          | `LiveKitTrackManager`   | Manager for audio/video tracks (see below) |
 | `uiManager`             | `LiveKitUIManager`      | Manager for UI elements (see below)        |
+| `recorder`              | `LiveKitRecorder`       | Manager for recorder integration (GM-only) |
 | `breakoutRoom`          | `string \| undefined`   | Current breakout room ID                   |
 | `audioBroadcastEnabled` | `boolean`               | Whether audio is being broadcast           |
 
@@ -224,6 +228,42 @@ Access via `game.webrtc.client._liveKitClient.uiManager`:
 | `setConnectionButtons(connected)`                           | `void`                     | Update button states based on connection |
 | `addConnectionQualityIndicator(odUserId, odUserCameraView)` | `void`                     | Add quality indicator dot to camera view |
 | `getUserAudioElement(odUserId, odVideoElement, volume)`     | `HTMLAudioElement \| null` | Get or create audio element for user     |
+| `applyStoredDockSize(html)`                                 | `void`                     | Restore persisted camera dock dimensions |
+| `installDockResizeObserver(html)`                           | `void`                     | Observe dock resizes, persist changes    |
+| `disposeDockResizeObserver()`                               | `void`                     | Disconnect resize observer               |
+| `setRecordButtonState(state, sessionId)`                    | `void`                     | Sync record/stop button visibility       |
+| `onRecordingPackaged(sessionId)`                            | `void`                     | Called when packaging completes          |
+
+---
+
+## LiveKitRecorder
+
+Access via `game.webrtc.client._liveKitClient.recorder`:
+
+### Methods
+
+| Method                                                       | Returns                  | Description                                        |
+| ------------------------------------------------------------ | ------------------------ | -------------------------------------------------- |
+| `isConfigured()`                                             | `boolean`                | True iff recorderUrl and recorderApiToken are set  |
+| `getUrl()`                                                   | `string`                 | Recorder base URL (trimmed)                        |
+| `getToken()`                                                 | `string`                 | Configured bearer token (trimmed)                  |
+| `reconfigure()`                                              | `Promise<void>`          | Tear down WS, re-init if configured                |
+| `init()`                                                     | `Promise<void>`          | Check active recording, connect WebSocket          |
+| `checkActiveRecording()`                                     | `Promise<{active, sessionId?}>` | GET /recording/status/{room}              |
+| `startRecording()`                                           | `Promise<string \| null>` | Start recording, returns session ID                |
+| `stopRecording()`                                            | `Promise<void>`          | Stop recording, server transitions to packaging    |
+| `deleteRecording(sessionId)`                                 | `Promise<void>`          | DELETE recording from server                       |
+| `awaitPackaging(sessionId, timeoutMs?)`                      | `Promise<void>`          | Resolves when packaging_complete WS event arrives  |
+| `downloadWav(sessionId)`                                     | `Promise<void>`          | Download WAV via auth fetch → blob                 |
+| `downloadZip(sessionId)`                                     | `Promise<void>`          | Download ZIP via auth fetch → blob                 |
+| `dispose()`                                                  | `void`                   | Close WS, clear timers                             |
+
+### Properties
+
+| Property          | Type                        | Description                                 |
+| ----------------- | --------------------------- | ------------------------------------------- |
+| `state`           | `RecorderState`             | Current state: idle/recording/stopping/packaging |
+| `activeSessionId` | `string \| null`            | Currently active session ID or null          |
 
 ---
 
@@ -241,6 +281,9 @@ These CSS classes are added to camera view elements and can be targeted for cust
 | `.livekit-control`                        | button    | Custom LiveKit control button        |
 | `.livekit-control.hidden`                 | button    | Hidden control (display: none)       |
 | `.livekit-control.disabled`               | button    | Disabled control (no pointer events) |
+| `.livekit-control.record`                 | button    | Record button (red circle)           |
+| `.livekit-control.record.recording`       | button    | Active recording (flashing animation)|
+| `.livekit-control.record-stop`            | button    | Stop button (red stop icon)          |
 | `.status-remote-hidden`                   | `<i>`     | Icon for remotely hidden users       |
 | `.status-remote-muted`                    | `<i>`     | Icon for remotely muted users        |
 | `.status-remote-ptt`                      | `<i>`     | Push-to-talk status indicator        |

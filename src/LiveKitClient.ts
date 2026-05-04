@@ -15,6 +15,7 @@ import { breakout } from "./LiveKitBreakout";
 import { Logger } from "./utils/logger";
 import LiveKitTrackManager from "./LiveKitTrackManager";
 import LiveKitUIManager from "./LiveKitUIManager";
+import LiveKitRecorder from "./LiveKitRecorder";
 
 const log = new Logger();
 
@@ -40,6 +41,7 @@ export default class LiveKitClient {
 
   trackManager: LiveKitTrackManager;
   uiManager: LiveKitUIManager;
+  recorder: LiveKitRecorder;
 
   constructor(liveKitAvClient: LiveKitAVClient) {
     this.avMaster = liveKitAvClient.master;
@@ -53,6 +55,7 @@ export default class LiveKitClient {
 
     this.trackManager = new LiveKitTrackManager(this);
     this.uiManager = new LiveKitUIManager(this);
+    this.recorder = new LiveKitRecorder(this);
   }
 
   /* -------------------------------------------- */
@@ -184,6 +187,10 @@ export default class LiveKitClient {
 
     // Set connection buttons state
     this.uiManager.setConnectionButtons(false);
+
+    // Tear down the recorder side-channel; init() will re-establish it on
+    // the next successful connection.
+    this.recorder.dispose();
 
     this.connectionState = ConnectionState.Disconnected;
 
