@@ -1,5 +1,15 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.7.0k
+
+feat: add GM-only recorder integration and camera dock size persistence
+- LiveKitRecorder class with HTTP + WebSocket control of livekit-recorder service
+- Record/stop buttons with save/delete/cancel dialog flows
+- Download prompt with WAV/ZIP format choice and delete-after-download option
+- Camera dock size persistence via ResizeObserver + client settings
+- Room name format changed to [worldId]_[randomID(32)]
+- Updated docs: ARCHITECTURE.md, API.md, CONTRIBUTING.md, AGENTS.md
+
 ## 0.6.8k
 
 - refactor: update action and replace deprecated syntax on workflow
