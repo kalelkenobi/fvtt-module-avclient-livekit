@@ -93,6 +93,8 @@
   "LIVEKITAVCLIENT.recorderUrlHint": "Base URL of the livekit-recorder service (e.g. http://recorder.example.com:8090). Leave blank to disable session recording.",
   "LIVEKITAVCLIENT.recorderApiToken": "Recorder API Token",
   "LIVEKITAVCLIENT.recorderApiTokenHint": "Bearer token used to authenticate against the livekit-recorder API.",
+  "LIVEKITAVCLIENT.recorderConnectionSettings": "Recorder Connection Settings",
+  "LIVEKITAVCLIENT.recorderConnectionSettingsHint": "Connection settings for the livekit-recorder service.",
   "LIVEKITAVCLIENT.recordStart": "Start session recording",
   "LIVEKITAVCLIENT.recordStop": "Stop session recording",
   "LIVEKITAVCLIENT.recordingInProgress": "Recording in progress",

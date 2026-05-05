@@ -134,8 +134,7 @@ All settings are accessible via `game.settings.get("avclient-livekit", key)`.
 | --------------------------- | --------- | ------- | --------------------------------------------------- |
 | `liveKitConnectionSettings` | `object`  | `{}`    | Server URL, room ID, API key, secret key            |
 | `resetRoom`                 | `boolean` | `false` | Trigger to generate a new meeting room ID (GM only) |
-| `recorderUrl`               | `string`  | `""`    | Recorder service base URL (GM-only visibility)      |
-| `recorderApiToken`          | `string`  | `""`    | Recorder bearer token (GM-only visibility)          |
+| `recorderConnectionSettings` | `object`  | `{}`    | Recorder service URL and API token (Server tab)     |
 | `debug`                     | `boolean` | `false` | Enable debug-level logging                          |
 | `liveKitTrace`              | `boolean` | `false` | Enable LiveKit SDK trace-level logging              |
 | `devMode`                   | `boolean` | `false` | Expose developer-only settings                      |
@@ -149,6 +148,15 @@ interface LiveKitConnectionSettings {
   room?: string; // Meeting room ID (auto-generated)
   username?: string; // API key
   password?: string; // Secret key
+}
+```
+
+### Recorder Connection Settings Object
+
+```typescript
+interface RecorderConnectionSettings {
+  url?: string;      // Recorder service base URL
+  apiToken?: string; // Bearer token for recorder API authentication
 }
 ```
 

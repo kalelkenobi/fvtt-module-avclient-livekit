@@ -366,47 +366,13 @@ export default function registerModuleSettings(): void {
     requiresReload: true,
   });
 
-  // Recorder service settings (GM-only visibility)
-  const isGM = game.user?.isGM ?? false;
-
-  game.settings?.register(MODULE_NAME, "recorderUrl", {
-    name: "LIVEKITAVCLIENT.recorderUrl",
-    hint: "LIVEKITAVCLIENT.recorderUrlHint",
+  game.settings?.register(MODULE_NAME, "recorderConnectionSettings", {
+    name: "LIVEKITAVCLIENT.recorderConnectionSettings",
+    hint: "LIVEKITAVCLIENT.recorderConnectionSettingsHint",
     scope: "world",
-    config: isGM,
-    default: "",
-    type: new foundry.data.fields.StringField({
-      required: true,
-      blank: true,
-      initial: "",
-    }),
-    onChange: () => {
-      game.webrtc?.client._liveKitClient.recorder
-        .reconfigure()
-        .catch((error: unknown) => {
-          log.error("recorderUrl: Error reconfiguring recorder", error);
-        });
-    },
-  });
-
-  game.settings?.register(MODULE_NAME, "recorderApiToken", {
-    name: "LIVEKITAVCLIENT.recorderApiToken",
-    hint: "LIVEKITAVCLIENT.recorderApiTokenHint",
-    scope: "world",
-    config: isGM,
-    default: "",
-    type: new foundry.data.fields.StringField({
-      required: true,
-      blank: true,
-      initial: "",
-    }),
-    onChange: () => {
-      game.webrtc?.client._liveKitClient.recorder
-        .reconfigure()
-        .catch((error: unknown) => {
-          log.error("recorderApiToken: Error reconfiguring recorder", error);
-        });
-    },
+    config: false,
+    default: {},
+    requiresReload: true,
   });
 
   // Persisted camera dock size (per-user)

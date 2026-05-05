@@ -227,8 +227,7 @@ Registers all module settings with Foundry's settings API:
 | `audioMusicMode`            | client | Tune audio for music streaming                 |
 | `useExternalAV`             | client | Open A/V in a separate browser window          |
 | `resetRoom`                 | world  | Generate a new room ID (GM-only trigger)       |
-| `recorderUrl`               | world  | Recorder service base URL (GM-only visibility) |
-| `recorderApiToken`          | world  | Recorder bearer token (GM-only visibility)     |
+| `recorderConnectionSettings` | world  | Recorder service configuration (Server tab)  |
 | `cameraDockSize`            | client | Persisted camera dock dimensions               |
 | `debug`                     | world  | Enable debug-level logging                     |
 | `liveKitTrace`              | world  | Enable LiveKit SDK trace-level logging         |

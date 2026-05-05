@@ -71,7 +71,7 @@ just reset              # Deep clean + pnpm install
 
 `LiveKitRecorder` is composed onto `LiveKitClient` (accessed via `game.webrtc.client._liveKitClient.recorder`):
 
-- **Settings:** `recorderUrl` and `recorderApiToken` (world-scoped, GM-only via conditional `config: game.user?.isGM`)
+- **Settings:** `recorderConnectionSettings` (world-scoped, configured via the AV config Server tab)
 - **State machine:** `idle` → `recording` → `stopping` → `packaging` → `idle`
 - **WebSocket:** Long-lived connection for real-time state updates (`recording_started`, `recording_stopped`, `packaging_complete`), with exponential backoff reconnection (1s–30s)
 - **HTTP API:** `start`, `stop`, `delete`, `status`, and `download` (WAV/ZIP) via auth headers

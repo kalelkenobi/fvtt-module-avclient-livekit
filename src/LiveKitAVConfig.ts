@@ -77,6 +77,11 @@ export default class LiveKitAVConfig
         (partContext as any).liveKitConnectionSettings =
           liveKitConnectionSettings;
         // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
+        (partContext as any).recorderConnectionSettings = game.settings?.get(
+          MODULE_NAME,
+          "recorderConnectionSettings",
+        );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
         (partContext as any).devMode = game.settings?.get(
           MODULE_NAME,
           "devMode",
@@ -211,7 +216,7 @@ export default class LiveKitAVConfig
         document: true,
       })._source.value;
 
-      if (setting.key === "liveKitConnectionSettings") {
+      if (setting.key === "liveKitConnectionSettings" || setting.key === "recorderConnectionSettings") {
         // We need to handle this one as an object and merge the settings
         const priorValueObject = game.settings?.get(
           // @ts-expect-error - document: true handling is not in foundry-vtt-types

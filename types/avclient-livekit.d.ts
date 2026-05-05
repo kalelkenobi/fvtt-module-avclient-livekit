@@ -11,6 +11,12 @@ interface LiveKitConnectionSettings {
   password?: string;
 }
 
+// Recorder connection settings
+interface RecorderConnectionSettings {
+  url?: string;
+  apiToken?: string;
+}
+
 // Custom foundry socket message
 interface SocketMessage {
   action: "breakout" | "connect" | "disconnect" | "render";
@@ -167,16 +173,7 @@ declare global {
       step: 5;
       integer: true;
     }>;
-    "avclient-livekit.recorderUrl": foundry.data.fields.StringField<{
-      required: true;
-      blank: true;
-      initial: "";
-    }>;
-    "avclient-livekit.recorderApiToken": foundry.data.fields.StringField<{
-      required: true;
-      blank: true;
-      initial: "";
-    }>;
+    "avclient-livekit.recorderConnectionSettings": RecorderConnectionSettings;
     "avclient-livekit.cameraDockSize": CameraDockSize;
   }
 }

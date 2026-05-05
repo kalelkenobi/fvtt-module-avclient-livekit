@@ -1,12 +1,12 @@
 import { LANG_NAME, MODULE_NAME } from "./utils/constants";
 import { Logger } from "./utils/logger";
 import { formatRecorderTimestamp } from "./utils/helpers";
-import type {
-  RecorderActionResponse,
-  RecorderRoomStatus,
-  RecorderState,
-  RecorderWsEvent,
-} from "../types/avclient-livekit";
+  import type {
+    RecorderActionResponse,
+    RecorderRoomStatus,
+    RecorderState,
+    RecorderWsEvent,
+  } from "../types/avclient-livekit";
 import type LiveKitClient from "./LiveKitClient";
 
 const log = new Logger("LiveKitRecorder");
@@ -61,13 +61,15 @@ export default class LiveKitRecorder {
 
   /** Recorder base URL with any trailing slash trimmed. */
   getUrl(): string {
-    const raw = (game.settings?.get(MODULE_NAME, "recorderUrl") ?? "");
+    const settings = game.settings?.get(MODULE_NAME, "recorderConnectionSettings");
+    const raw = settings?.url ?? "";
     return raw.trim().replace(/\/+$/, "");
   }
 
   /** Configured bearer token (trimmed). */
   getToken(): string {
-    const raw = (game.settings?.get(MODULE_NAME, "recorderApiToken") ?? "");
+    const settings = game.settings?.get(MODULE_NAME, "recorderConnectionSettings");
+    const raw = settings?.apiToken ?? "";
     return raw.trim();
   }
 
