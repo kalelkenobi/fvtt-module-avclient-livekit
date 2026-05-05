@@ -1,5 +1,10 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.7.1k
+
+- refactor: move recorder settings to server settings tab
+- chore: update deps
+
 ## 0.7.0k
 
 feat: add GM-only recorder integration and camera dock size persistence
