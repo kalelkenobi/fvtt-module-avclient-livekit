@@ -1,5 +1,10 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.7.2k
+
+- fix: correct camera dock resize persistence and record/stop button behaviour
+- docs: add plan convention and completion checklist to AGENTS.md
+
 ## 0.7.1k
 
 - refactor: move recorder settings to server settings tab
