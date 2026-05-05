@@ -375,12 +375,19 @@ export default function registerModuleSettings(): void {
     requiresReload: true,
   });
 
-  // Persisted camera dock size (per-user)
-  game.settings?.register(MODULE_NAME, "cameraDockSize", {
-    name: "cameraDockSize",
+  // Persisted camera dock height for horizontal (top/bottom) layout
+  game.settings?.register(MODULE_NAME, "cameraDockHeight", {
+    name: "cameraDockHeight",
     scope: "client",
     config: false,
-    default: {},
+    default: 0,
+    type: new foundry.data.fields.NumberField({
+      required: true,
+      nullable: false,
+      integer: true,
+      initial: 0,
+      min: 0,
+    }),
   });
 
   // Register debug logging setting

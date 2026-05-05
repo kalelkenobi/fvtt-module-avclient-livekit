@@ -228,7 +228,7 @@ Registers all module settings with Foundry's settings API:
 | `useExternalAV`             | client | Open A/V in a separate browser window          |
 | `resetRoom`                 | world  | Generate a new room ID (GM-only trigger)       |
 | `recorderConnectionSettings` | world  | Recorder service configuration (Server tab)  |
-| `cameraDockSize`            | client | Persisted camera dock dimensions               |
+| `cameraDockHeight`          | client | Persisted height for horizontal dock layout   |
 | `debug`                     | world  | Enable debug-level logging                     |
 | `liveKitTrace`              | world  | Enable LiveKit SDK trace-level logging         |
 | `devMode`                   | world  | Expose developer-only settings                 |
@@ -270,7 +270,6 @@ Logging wrapper using the [`debug`](https://www.npmjs.com/package/debug) library
 
 - **`LiveKitConnectionSettings`** — server connection parameters and credentials
 - **`SocketMessage`** — inter-client socket message format (actions: breakout, connect, disconnect, render)
-- **`CameraDockSize`** — persisted dock dimensions `{ width?, height? }`
 - **`RecorderState`** — recorder state machine: `"idle" | "recording" | "stopping" | "packaging"`
 - **`RecorderRoomStatus`** — `{ is_active: boolean; session_id: string }`
 - **`RecorderActionResponse`** — `{ success: boolean; session_id: string }`

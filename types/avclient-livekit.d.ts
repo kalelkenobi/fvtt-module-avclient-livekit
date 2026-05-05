@@ -41,12 +41,6 @@ type LiveKitSettingsConfig = SettingConfig & {
 
 type BreakoutRoomRegistry = Record<string, string | undefined>;
 
-// Persisted camera dock size (client-scoped)
-interface CameraDockSize {
-  width?: number;
-  height?: number;
-}
-
 // Recorder state machine
 type RecorderState = "idle" | "recording" | "stopping" | "packaging";
 
@@ -174,6 +168,10 @@ declare global {
       integer: true;
     }>;
     "avclient-livekit.recorderConnectionSettings": RecorderConnectionSettings;
-    "avclient-livekit.cameraDockSize": CameraDockSize;
+    "avclient-livekit.cameraDockHeight": foundry.data.fields.NumberField<{
+      initial: 0;
+      integer: true;
+      min: 0;
+    }>;
   }
 }

@@ -3,10 +3,7 @@ import { LANG_NAME, MODULE_NAME } from "./utils/constants";
 import { addContextOptions } from "./LiveKitBreakout";
 import { Logger } from "./utils/logger";
 import type LiveKitClient from "./LiveKitClient";
-import type {
-  CameraDockSize,
-  RecorderState,
-} from "../types/avclient-livekit";
+import type { RecorderState } from "../types/avclient-livekit";
 
 const log = new Logger();
 
@@ -18,7 +15,9 @@ export default class LiveKitUIManager {
   windowClickListener: EventListener | null = null;
 
   private dockObserver: ResizeObserver | null = null;
+  private dockStyleObserver: MutationObserver | null = null;
   private observedDockElement: HTMLElement | null = null;
+  private applyingHeight = false;
   private readonly persistDockSize: () => void;
 
   constructor(client: LiveKitClient) {
@@ -83,41 +82,39 @@ export default class LiveKitUIManager {
   }
 
   /**
-   * Inject the record/stop buttons into the local user's camera dock. The
-   * buttons are only shown to GMs while the recorder service is configured.
+   * Inject a single record-toggle button into the local user's camera dock.
+   * Only shown to GMs while the recorder service is configured. Button icon
+   * and state classes change based on the recorder's current state.
    */
   addRecorderButtons(element: HTMLElement): void {
     if (this.client.useExternalAV) return;
     if (!game.user?.isGM) return;
     if (!this.client.recorder.isConfigured()) return;
 
-    const recordButton = document.createElement("button");
-    recordButton.type = "button";
-    recordButton.className =
-      "av-control inline-control toggle icon fa-solid fa-fw fa-circle livekit-control record";
-    recordButton.dataset.tooltip = "";
-    recordButton.ariaLabel =
+    const toggleButton = document.createElement("button");
+    toggleButton.type = "button";
+    toggleButton.className =
+      "av-control inline-control toggle icon fa-solid fa-fw livekit-control record-toggle";
+    toggleButton.dataset.tooltip = "";
+    toggleButton.ariaLabel =
       game.i18n.localize(`${LANG_NAME}.recordStart`);
-    recordButton.addEventListener("click", () => {
-      this.onRecordClick().catch((error: unknown) => {
-        log.error("Error starting recording:", error);
-      });
+    toggleButton.addEventListener("click", () => {
+      switch (this.client.recorder.state) {
+        case "idle":
+          this.onRecordClick().catch((error: unknown) => {
+            log.error("Error starting recording:", error);
+          });
+          break;
+        case "recording":
+          this.onStopClick().catch((error: unknown) => {
+            log.error("Error stopping recording:", error);
+          });
+          break;
+        default:
+          // stopping / packaging — disabled, ignore
+      }
     });
-    element.before(recordButton);
-
-    const stopButton = document.createElement("button");
-    stopButton.type = "button";
-    stopButton.className =
-      "av-control inline-control toggle icon fa-solid fa-fw fa-stop livekit-control record-stop hidden";
-    stopButton.dataset.tooltip = "";
-    stopButton.ariaLabel =
-      game.i18n.localize(`${LANG_NAME}.recordStop`);
-    stopButton.addEventListener("click", () => {
-      this.onStopClick().catch((error: unknown) => {
-        log.error("Error stopping recording:", error);
-      });
-    });
-    element.before(stopButton);
+    element.before(toggleButton);
 
     // Sync state for any active recording the GM may be resuming
     this.setRecordButtonState(
@@ -286,9 +283,9 @@ export default class LiveKitUIManager {
   }
 
   /**
-   * Update the record/stop button visibility and disabled state based on the
-   * recorder's current state. Called by `LiveKitRecorder` whenever its state
-   * changes.
+   * Update the record-toggle button icon, classes, and label based on the
+   * recorder's current state. Called by `LiveKitRecorder` on every state
+   * transition.
    */
   setRecordButtonState(state: RecorderState, _sessionId: string | null): void {
     void _sessionId;
@@ -296,38 +293,34 @@ export default class LiveKitUIManager {
       `.camera-view[data-user="${game.user?.id ?? ""}"]`,
     );
     if (!userCameraView) return;
-    const recordButton = userCameraView.querySelector(
-      ".livekit-control.record",
+    const toggle = userCameraView.querySelector(
+      ".livekit-control.record-toggle",
     );
-    const stopButton = userCameraView.querySelector(
-      ".livekit-control.record-stop",
-    );
-    if (
-      !(recordButton instanceof HTMLElement) ||
-      !(stopButton instanceof HTMLElement)
-    ) {
-      return;
-    }
+    if (!(toggle instanceof HTMLElement)) return;
 
+    const iconClasses = ["fa-circle", "fa-stop", "fa-spinner", "fa-spin"];
+    const stateClasses = ["idle", "recording", "stopping", "packaging"];
+    toggle.classList.remove(...iconClasses, ...stateClasses, "disabled");
+
+    const t = game.i18n?.localize.bind(game.i18n) ?? ((k: string) => k);
     switch (state) {
       case "idle":
-        recordButton.classList.remove("hidden", "disabled", "recording");
-        stopButton.classList.add("hidden");
-        stopButton.classList.remove("disabled");
+        toggle.classList.add("fa-circle", "idle");
+        toggle.ariaLabel = t(`${LANG_NAME}.recordStart`) || "Start recording";
         break;
       case "recording":
-        recordButton.classList.remove("hidden");
-        recordButton.classList.add("disabled", "recording");
-        stopButton.classList.remove("hidden", "disabled");
+        toggle.classList.add("fa-stop", "recording");
+        toggle.ariaLabel = t(`${LANG_NAME}.recordStop`) || "Stop recording";
         break;
       case "stopping":
-        recordButton.classList.add("hidden");
-        stopButton.classList.remove("hidden");
-        stopButton.classList.add("disabled");
+        toggle.classList.add("fa-spinner", "fa-spin", "stopping", "disabled");
+        toggle.ariaLabel =
+          t(`${LANG_NAME}.recordingInProgress`) || "Recording in progress";
         break;
       case "packaging":
-        recordButton.classList.add("hidden");
-        stopButton.classList.add("hidden");
+        toggle.classList.add("fa-spinner", "fa-spin", "packaging", "disabled");
+        toggle.ariaLabel =
+          t(`${LANG_NAME}.recordingInProgress`) || "Recording in progress";
         break;
     }
   }
@@ -435,9 +428,12 @@ export default class LiveKitUIManager {
     _cameraviews: foundry.applications.apps.av.CameraViews,
     html: HTMLElement,
   ): void {
-    // Apply persisted dock size and (idempotently) install the resize observer
-    this.applyStoredDockSize(html);
-    this.installDockResizeObserver(html);
+    const dock = this.findDockElement(html);
+
+    // Apply persisted dock size and install observers
+    this.applyHorizontalDockHeight(dock);
+    this.installDockResizeObserver(dock);
+    this.installDockStyleObserver(dock);
 
     const userId = game.user?.id;
     if (!userId) {
@@ -470,33 +466,34 @@ export default class LiveKitUIManager {
   /* -------------------------------------------- */
 
   /**
-   * Read the persisted dock size and apply it to `#camera-views`. Skipped
-   * when the dock is minimized or when the stored value is below the CSS
-   * min thresholds.
+   * For horizontal (top/bottom) docks, apply our persisted height after the
+   * current render cycle completes so we don't race with Foundry's own
+   * dimension apply. Vertical (left/right) docks are handled by Foundation
+   * through the built-in `client.dockWidth` setting.
    */
-  applyStoredDockSize(html: HTMLElement): void {
-    const dock = this.findDockElement(html);
+  private applyHorizontalDockHeight(dock: HTMLElement | null): void {
     if (!dock || dock.classList.contains("minimized")) return;
-    const stored = (game.settings?.get(MODULE_NAME, "cameraDockSize") ??
-      {});
-    if (
-      typeof stored.width === "number" &&
-      stored.width >= DOCK_MIN_WIDTH &&
-      dock.classList.contains("vertical")
-    ) {
-      dock.style.width = `${String(stored.width)}px`;
-    }
-    if (
-      typeof stored.height === "number" &&
-      stored.height >= DOCK_MIN_HEIGHT &&
-      dock.classList.contains("horizontal")
-    ) {
-      dock.style.height = `${String(stored.height)}px`;
-    }
+    if (!dock.classList.contains("horizontal")) return;
+    const stored: number = game.settings?.get(MODULE_NAME, "cameraDockHeight") ?? 0;
+    if (stored < DOCK_MIN_HEIGHT) return;
+    requestAnimationFrame(() => {
+      const current = dock.style.height
+        ? parseFloat(dock.style.height)
+        : NaN;
+      if (!Number.isFinite(current) || current !== stored) {
+        this.applyingHeight = true;
+        dock.style.height = `${String(stored)}px`;
+        requestAnimationFrame(() => { this.applyingHeight = false; });
+      }
+    });
   }
 
-  installDockResizeObserver(html: HTMLElement): void {
-    const dock = this.findDockElement(html);
+  /**
+   * Idempotently install a `ResizeObserver` that persists the user's dock
+   * dimension on every resize. Width is written to Foundry's native
+   * `client.dockWidth`; height is written to our `cameraDockHeight` setting.
+   */
+  private installDockResizeObserver(dock: HTMLElement | null): void {
     if (!dock) return;
     if (this.observedDockElement === dock && this.dockObserver) return;
     if (this.dockObserver) {
@@ -507,10 +504,56 @@ export default class LiveKitUIManager {
     this.observedDockElement = dock;
   }
 
-  disposeDockResizeObserver(): void {
+  /**
+   * For horizontal docks, install a `MutationObserver` that re-applies
+   * our persisted height whenever Foundry overwrites the inline style.
+   * Not needed for vertical docks — Foundry respects `client.dockWidth`
+   * natively.
+   */
+  private installDockStyleObserver(dock: HTMLElement | null): void {
+    if (!dock?.classList.contains("horizontal")) {
+      if (this.dockStyleObserver) {
+        this.dockStyleObserver.disconnect();
+        this.dockStyleObserver = null;
+      }
+      return;
+    }
+    if (this.dockStyleObserver) return;
+
+    this.dockStyleObserver = new MutationObserver((mutations) => {
+      if (this.applyingHeight) return;
+      for (const m of mutations) {
+        if (m.type === "attributes" && m.attributeName === "style") {
+          const stored: number = game.settings?.get(
+            MODULE_NAME,
+            "cameraDockHeight",
+          ) ?? 0;
+          if (stored < DOCK_MIN_HEIGHT) return;
+          const current = dock.style.height
+            ? parseFloat(dock.style.height)
+            : NaN;
+          if (!Number.isFinite(current) || current !== stored) {
+            this.applyingHeight = true;
+            dock.style.height = `${String(stored)}px`;
+            requestAnimationFrame(() => { this.applyingHeight = false; });
+          }
+        }
+      }
+    });
+    this.dockStyleObserver.observe(dock, {
+      attributes: true,
+      attributeFilter: ["style"],
+    });
+  }
+
+  disposeDockObservers(): void {
     if (this.dockObserver) {
       this.dockObserver.disconnect();
       this.dockObserver = null;
+    }
+    if (this.dockStyleObserver) {
+      this.dockStyleObserver.disconnect();
+      this.dockStyleObserver = null;
     }
     this.observedDockElement = null;
   }
@@ -524,24 +567,33 @@ export default class LiveKitUIManager {
   private savePersistedDockSize(): void {
     const dock = this.observedDockElement;
     if (!dock || dock.classList.contains("minimized")) return;
-    const next: CameraDockSize = {};
     if (dock.classList.contains("vertical")) {
-      next.width = dock.offsetWidth;
+      const w = dock.offsetWidth;
+      if (w >= DOCK_MIN_WIDTH) {
+        const current: number = this.client.settings.get(
+          "client",
+          "dockWidth",
+        ) as number;
+        if (current !== w) {
+          this.client.settings.set("client", "dockWidth", w);
+        }
+      }
+    } else if (dock.classList.contains("horizontal")) {
+      const h = dock.offsetHeight;
+      if (h >= DOCK_MIN_HEIGHT) {
+        const current: number = game.settings?.get(
+          MODULE_NAME,
+          "cameraDockHeight",
+        ) ?? 0;
+        if (current !== h) {
+          game.settings
+            ?.set(MODULE_NAME, "cameraDockHeight", h)
+            .catch((error: unknown) => {
+              log.error("Error saving dock height:", error);
+            });
+        }
+      }
     }
-    if (dock.classList.contains("horizontal")) {
-      next.height = dock.offsetHeight;
-    }
-    if (next.width === undefined && next.height === undefined) return;
-    const current = (game.settings?.get(MODULE_NAME, "cameraDockSize") ??
-      {});
-    if (current.width === next.width && current.height === next.height) {
-      return;
-    }
-    game.settings
-      ?.set(MODULE_NAME, "cameraDockSize", { ...current, ...next })
-      .catch((error: unknown) => {
-        log.error("Error saving camera dock size:", error);
-      });
   }
 
   /**

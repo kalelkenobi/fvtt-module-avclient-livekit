@@ -126,7 +126,7 @@ All settings are accessible via `game.settings.get("avclient-livekit", key)`.
 | `breakoutRoomRegistry`     | `object`  | `{}`    | Mapping of user IDs to breakout room IDs                                          |
 | `audioMusicMode`           | `boolean` | `false` | Optimize audio for music streaming (higher bitrate, stereo, no echo cancellation) |
 | `useExternalAV`            | `boolean` | `false` | Open A/V in a separate browser window                                             |
-| `cameraDockSize`           | `object`  | `{}`    | Persisted camera dock dimensions `{ width?, height? }`                            |
+| `cameraDockHeight`        | `number`  | `0`     | Persisted camera dock height for horizontal (top/bottom) layout                  |
 
 ### World-Scoped Settings
 
