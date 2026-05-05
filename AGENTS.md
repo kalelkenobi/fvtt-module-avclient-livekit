@@ -64,7 +64,7 @@ just reset              # Deep clean + pnpm install
 
 - `LiveKitConnectionSettings` interface
 - `SocketMessage` interface
-- `CameraDockSize`, `RecorderState`, `RecorderRoomStatus`, `RecorderActionResponse`, `RecorderWsEvent` types
+- `RecorderState`, `RecorderRoomStatus`, `RecorderActionResponse`, `RecorderWsEvent` types
 - Global augmentations for `SettingConfig`
 
 ### Recorder Integration
@@ -76,11 +76,100 @@ just reset              # Deep clean + pnpm install
 - **WebSocket:** Long-lived connection for real-time state updates (`recording_started`, `recording_stopped`, `packaging_complete`), with exponential backoff reconnection (1s–30s)
 - **HTTP API:** `start`, `stop`, `delete`, `status`, and `download` (WAV/ZIP) via auth headers
 - **No polling fallback:** All state flows through the WebSocket; packaging completion resolves via a promise-based waiter (`awaitPackaging`)
-- **UI:** Record/stop buttons injected into the GM's camera dock; stop prompt offers Save/Delete/Cancel; download prompt offers WAV/ZIP/Close + optional delete-after-download
+- **UI:** A single record-toggle button is injected into the GM's camera dock; its icon and state classes (idle → record circle, recording → stop icon with pulse animation, stopping/packaging → spinner) are driven by recorder state. Stop prompt offers Save/Delete/Cancel; download prompt offers WAV/ZIP/Close + optional delete-after-download.
 - **Room name format:** `[worldId]_[randomID(32)]` — used consistently across connect and reset flows
-- **Camera dock size persistence:** Per-user `{ width?, height? }` stored in `cameraDockSize` client setting, restored on re-render via `ResizeObserver`
+- **Camera dock size persistence:** Vertical dock width is written to Foundry's built-in `client.dockWidth` setting via `ResizeObserver`. Horizontal dock height is persisted in `cameraDockHeight` and re-applied after each render via `requestAnimationFrame` + `MutationObserver` to resist Foundry's own dimension apply.
 
 **Testing:** No test framework. Validation is via TypeScript compilation, ESLint, and manual QA (checklist in `docs/CONTRIBUTING.md`).
+
+## Implementation Plan Convention
+
+For any non-trivial change (multi-file, new feature, significant refactor), create a
+plan document **before** writing code. Trivial fixes (single-line, typo, simple config)
+do not need a plan.
+
+### Plan File
+
+- **Location:** `.opencode/plans/PLAN-<short-slug>.md`
+- **Git-ignored:** Yes (`.opencode/` is already in `.gitignore`)
+
+### Plan File Format
+
+```markdown
+# Plan: <brief title>
+**Created:** YYYY-MM-DD
+**Status:** in-progress
+
+## Overview
+<what is being done and why — 2-4 sentences>
+
+## Changes
+Detailed file-by-file breakdown of what needs to change and how.
+
+### `src/<FileA>.ts`
+- **Lines L1-L40:** <what to change and why>
+- **Line L15:** Change `foo` to `bar` to fix <reason>
+- **After line L30:** Add new method `handleX()` that <purpose>
+
+### `src/<FileB>.ts`
+- **Lines L50-L80:** <description of change>
+- ...
+
+### `types/avclient-livekit.d.ts` (if needed)
+- **Line L22:** Add `newField: string` to `SomeInterface`
+
+### `public/lang/en.json` (if needed)
+- Add `"LIVEKITAVCLIENT.newKey": "User-facing text"`
+
+## Todo
+- [ ] Task 1 — maps to items in Changes above
+- [/] Task 2 (in progress)
+- [x] Task 3 (done)
+```
+
+### During Implementation
+
+- The `todowrite` tool is the **canonical** todo tracker during an active session.
+- Sync the plan file's checkbox list to match `todowrite` state at session boundaries
+  (before ending or when the agent detects potential interruption).
+- On starting a new session, scan `.opencode/plans/` for any `in-progress` plans
+  and resume from the last synced state.
+- The `Changes` section must be detailed enough (files, line numbers, intent)
+  that even a smaller coding model can follow it with minimal mistakes.
+
+### Plan Lifecycle
+
+- **Created** → `Status: in-progress` with initial todo.
+- **During work** → Update checkboxes as tasks progress.
+- **Completed** → Delete the plan file after the work is verified (build + lint pass).
+- **Abandoned** → Set `Status: abandoned` with a brief note explaining why;
+  keep the file for future reference.
+
+## Completion Checklist
+
+Every implementation task MUST end with these three steps, in order:
+
+1. **Build:** `pnpm run build` — must pass with zero errors.
+2. **Lint:** `npx eslint .` — must pass with zero warnings and zero errors.
+3. **Commit:** Create a local git commit with a message following the repo's
+   [conventional commit](https://www.conventionalcommits.org/) style:
+
+   ```
+   <type>: <brief description in lowercase imperative>
+   ```
+
+   Common types: `feat`, `fix`, `refactor`, `chore`, `version`, `docs`.
+
+   Multi-line commits use bullet points for details:
+   ```
+   feat: add <feature description>
+   - Detail point one
+   - Detail point two
+   ```
+
+   Match the tone and level of detail of existing commits (see `git log --oneline -20`).
+
+   **Do NOT push** unless the user explicitly asks.
 
 ## Code Style Guidelines
 
