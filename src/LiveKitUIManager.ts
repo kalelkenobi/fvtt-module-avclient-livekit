@@ -7,25 +7,12 @@ import type { RecorderState } from "../types/avclient-livekit";
 
 const log = new Logger();
 
-const DOCK_MIN_WIDTH = 250;
-const DOCK_MIN_HEIGHT = 175;
-
 export default class LiveKitUIManager {
   client: LiveKitClient;
   windowClickListener: EventListener | null = null;
 
-  private dockObserver: ResizeObserver | null = null;
-  private dockStyleObserver: MutationObserver | null = null;
-  private observedDockElement: HTMLElement | null = null;
-  private applyingHeight = false;
-  private readonly persistDockSize: () => void;
-
   constructor(client: LiveKitClient) {
     this.client = client;
-    this.persistDockSize = foundry.utils.debounce(
-      this.savePersistedDockSize.bind(this),
-      500,
-    );
   }
 
   addConnectionButtons(element: HTMLElement): void {
@@ -81,11 +68,6 @@ export default class LiveKitUIManager {
     this.addRecorderButtons(element);
   }
 
-  /**
-   * Inject a single record-toggle button into the local user's camera dock.
-   * Only shown to GMs while the recorder service is configured. Button icon
-   * and state classes change based on the recorder's current state.
-   */
   addRecorderButtons(element: HTMLElement): void {
     if (this.client.useExternalAV) return;
     if (!game.user?.isGM) return;
@@ -395,13 +377,6 @@ export default class LiveKitUIManager {
     _cameraviews: foundry.applications.apps.av.CameraViews,
     html: HTMLElement,
   ): void {
-    const dock = this.findDockElement(html);
-
-    // Apply persisted dock size and install observers
-    this.applyHorizontalDockHeight(dock);
-    this.installDockResizeObserver(dock);
-    this.installDockStyleObserver(dock);
-
     const userId = game.user?.id;
     if (!userId) {
       log.error("No user ID found; cannot render camera views");
@@ -410,14 +385,8 @@ export default class LiveKitUIManager {
     const cameraBox = html.querySelector(
       `[data-user="${userId}"].user-controls`,
     );
-    // Look for existing connection buttons (only the connect/disconnect
-    // buttons; recorder controls may be absent if recorder config changes
-    // at runtime, so we still re-run addConnectionButtons in that case)
-    if (
-      cameraBox?.querySelector(
-        ".livekit-control.connect, .livekit-control.disconnect",
-      )
-    ) {
+    // Look for existing connection buttons
+    if (cameraBox?.querySelector(".livekit-control")) {
       return;
     }
     const element = cameraBox?.querySelector('[data-action="configure"]');
@@ -428,144 +397,9 @@ export default class LiveKitUIManager {
     this.addConnectionButtons(element);
   }
 
-  /* -------------------------------------------- */
-  /*  Camera dock size persistence                */
-  /* -------------------------------------------- */
-
-  /**
-   * For horizontal (top/bottom) docks, apply our persisted height after the
-   * current render cycle completes so we don't race with Foundry's own
-   * dimension apply. Vertical (left/right) docks are handled by Foundation
-   * through the built-in `client.dockWidth` setting.
-   */
-  private applyHorizontalDockHeight(dock: HTMLElement | null): void {
-    if (!dock || dock.classList.contains("minimized")) return;
-    if (!dock.classList.contains("horizontal")) return;
-    const stored: number = game.settings?.get(MODULE_NAME, "cameraDockHeight") ?? 0;
-    if (stored < DOCK_MIN_HEIGHT) return;
-    requestAnimationFrame(() => {
-      const current = dock.style.height
-        ? parseFloat(dock.style.height)
-        : NaN;
-      if (!Number.isFinite(current) || current !== stored) {
-        this.applyingHeight = true;
-        dock.style.height = `${String(stored)}px`;
-        requestAnimationFrame(() => { this.applyingHeight = false; });
-      }
-    });
-  }
-
-  /**
-   * Idempotently install a `ResizeObserver` that persists the user's dock
-   * dimension on every resize. Width is written to Foundry's native
-   * `client.dockWidth`; height is written to our `cameraDockHeight` setting.
-   */
-  private installDockResizeObserver(dock: HTMLElement | null): void {
-    if (!dock) return;
-    if (this.observedDockElement === dock && this.dockObserver) return;
-    if (this.dockObserver) {
-      this.dockObserver.disconnect();
-    }
-    this.dockObserver = new ResizeObserver(() => { this.persistDockSize(); });
-    this.dockObserver.observe(dock);
-    this.observedDockElement = dock;
-  }
-
-  /**
-   * For horizontal docks, install a `MutationObserver` that re-applies
-   * our persisted height whenever Foundry overwrites the inline style.
-   * Not needed for vertical docks — Foundry respects `client.dockWidth`
-   * natively.
-   */
-  private installDockStyleObserver(dock: HTMLElement | null): void {
-    if (!dock?.classList.contains("horizontal")) {
-      if (this.dockStyleObserver) {
-        this.dockStyleObserver.disconnect();
-        this.dockStyleObserver = null;
-      }
-      return;
-    }
-    if (this.dockStyleObserver) return;
-
-    this.dockStyleObserver = new MutationObserver((mutations) => {
-      if (this.applyingHeight) return;
-      for (const m of mutations) {
-        if (m.type === "attributes" && m.attributeName === "style") {
-          const stored: number = game.settings?.get(
-            MODULE_NAME,
-            "cameraDockHeight",
-          ) ?? 0;
-          if (stored < DOCK_MIN_HEIGHT) return;
-          const current = dock.style.height
-            ? parseFloat(dock.style.height)
-            : NaN;
-          if (!Number.isFinite(current) || current !== stored) {
-            this.applyingHeight = true;
-            dock.style.height = `${String(stored)}px`;
-            requestAnimationFrame(() => { this.applyingHeight = false; });
-          }
-        }
-      }
-    });
-    this.dockStyleObserver.observe(dock, {
-      attributes: true,
-      attributeFilter: ["style"],
-    });
-  }
-
-  disposeDockObservers(): void {
-    if (this.dockObserver) {
-      this.dockObserver.disconnect();
-      this.dockObserver = null;
-    }
-    if (this.dockStyleObserver) {
-      this.dockStyleObserver.disconnect();
-      this.dockStyleObserver = null;
-    }
-    this.observedDockElement = null;
-  }
-
-  private findDockElement(html: HTMLElement): HTMLElement | null {
-    if (html.id === "camera-views") return html;
-    const found = html.querySelector("#camera-views");
-    return found instanceof HTMLElement ? found : null;
-  }
-
-  private savePersistedDockSize(): void {
-    const dock = this.observedDockElement;
-    if (!dock || dock.classList.contains("minimized")) return;
-    if (dock.classList.contains("vertical")) {
-      const w = dock.offsetWidth;
-      if (w >= DOCK_MIN_WIDTH) {
-        const current: number = this.client.settings.get(
-          "client",
-          "dockWidth",
-        ) as number;
-        if (current !== w) {
-          this.client.settings.set("client", "dockWidth", w);
-        }
-      }
-    } else if (dock.classList.contains("horizontal")) {
-      const h = dock.offsetHeight;
-      if (h >= DOCK_MIN_HEIGHT) {
-        const current: number = game.settings?.get(
-          MODULE_NAME,
-          "cameraDockHeight",
-        ) ?? 0;
-        if (current !== h) {
-          game.settings
-            ?.set(MODULE_NAME, "cameraDockHeight", h)
-            .catch((error: unknown) => {
-              log.error("Error saving dock height:", error);
-            });
-        }
-      }
-    }
-  }
-
   /**
    * Change volume control for a stream
-   * @param {Event} event   The originating change event from interaction with the range input
+   * @param {Event} event The originating change event from interaction with the range input
    */
   onVolumeChange(event: Event): void {
     const input = event.currentTarget;

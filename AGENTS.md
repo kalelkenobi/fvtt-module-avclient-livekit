@@ -78,7 +78,6 @@ just reset              # Deep clean + pnpm install
 - **No polling fallback:** All state flows through the WebSocket; stop finalises inline (no async packaging step)
 - **UI:** A single record-toggle button is injected into the GM's camera dock; its icon and state classes (idle → record circle, recording → stop icon with pulse animation, stopping → spinner) are driven by recorder state. Stop prompt offers Save/Delete/Cancel; download prompt offers ZIP/Close + optional delete-after-download.
 - **Room name format:** `[worldId]_[randomID(32)]` — used consistently across connect and reset flows
-- **Camera dock size persistence:** Vertical dock width is written to Foundry's built-in `client.dockWidth` setting via `ResizeObserver`. Horizontal dock height is persisted in `cameraDockHeight` and re-applied after each render via `requestAnimationFrame` + `MutationObserver` to resist Foundry's own dimension apply.
 
 **Testing:** No test framework. Validation is via TypeScript compilation, ESLint, and manual QA (checklist in `docs/CONTRIBUTING.md`).
 

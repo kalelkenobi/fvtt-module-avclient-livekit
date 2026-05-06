@@ -175,10 +175,5 @@ declare global {
       integer: true;
     }>;
     "avclient-livekit.recorderConnectionSettings": RecorderConnectionSettings;
-    "avclient-livekit.cameraDockHeight": foundry.data.fields.NumberField<{
-      initial: 0;
-      integer: true;
-      min: 0;
-    }>;
   }
 }

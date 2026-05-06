@@ -126,7 +126,6 @@ All settings are accessible via `game.settings.get("avclient-livekit", key)`.
 | `breakoutRoomRegistry`     | `object`  | `{}`    | Mapping of user IDs to breakout room IDs                                          |
 | `audioMusicMode`           | `boolean` | `false` | Optimize audio for music streaming (higher bitrate, stereo, no echo cancellation) |
 | `useExternalAV`            | `boolean` | `false` | Open A/V in a separate browser window                                             |
-| `cameraDockHeight`        | `number`  | `0`     | Persisted camera dock height for horizontal (top/bottom) layout                  |
 
 ### World-Scoped Settings
 
@@ -230,13 +229,11 @@ Access via `game.webrtc.client._liveKitClient.uiManager`:
 
 | Method                                                      | Returns                    | Description                              |
 | ----------------------------------------------------------- | -------------------------- | ---------------------------------------- |
-| `onRenderCameraViews(cameraViews, cameraViewsElement)`      | `void`                     | Handle camera views render hook          |
 | `onGetUserContextOptions(playersElement, contextOptions)`   | `void`                     | Add breakout room context menu options   |
 | `addConnectionButtons(element)`                             | `void`                     | Add LiveKit control buttons to UI        |
 | `setConnectionButtons(connected)`                           | `void`                     | Update button states based on connection |
 | `addConnectionQualityIndicator(odUserId, odUserCameraView)` | `void`                     | Add quality indicator dot to camera view |
 | `getUserAudioElement(odUserId, odVideoElement, volume)`     | `HTMLAudioElement \| null` | Get or create audio element for user     |
-| `applyStoredDockSize(html)`                                 | `void`                     | Restore persisted camera dock dimensions |
 | `installDockResizeObserver(html)`                           | `void`                     | Observe dock resizes, persist changes    |
 | `disposeDockResizeObserver()`                               | `void`                     | Disconnect resize observer               |
 | `setRecordButtonState(state, sessionId)`                    | `void`                     | Sync record/stop button visibility       |

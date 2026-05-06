@@ -122,7 +122,6 @@ stateDiagram-v2
 - **UI elements:** `addConnectionButtons()`, `addConnectionQualityIndicator()`, `setConnectionQualityIndicator()`, `onRenderCameraViews()`
 - **Interaction inputs:** Volume slider overrides, `onAudioPlaybackStatusChanged()`
 - **Recorder controls:** `addRecorderButtons()`, `setRecordButtonState()`
-- **Camera dock persistence:** `applyStoredDockSize()`, `installDockResizeObserver()`, `disposeDockResizeObserver()`
 
 ---
 

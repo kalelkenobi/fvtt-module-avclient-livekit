@@ -375,21 +375,6 @@ export default function registerModuleSettings(): void {
     requiresReload: true,
   });
 
-  // Persisted camera dock height for horizontal (top/bottom) layout
-  game.settings?.register(MODULE_NAME, "cameraDockHeight", {
-    name: "cameraDockHeight",
-    scope: "client",
-    config: false,
-    default: 0,
-    type: new foundry.data.fields.NumberField({
-      required: true,
-      nullable: false,
-      integer: true,
-      initial: 0,
-      min: 0,
-    }),
-  });
-
   // Register debug logging setting
   game.settings?.register(MODULE_NAME, "debug", {
     name: "LIVEKITAVCLIENT.debug",

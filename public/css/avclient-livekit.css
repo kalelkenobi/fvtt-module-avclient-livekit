@@ -21,12 +21,7 @@
 }
 
 .camera-view .av-control.livekit-control.record-toggle.recording {
-  animation: livekit-record-flash 1.2s infinite ease-in-out;
-}
-
-@keyframes livekit-record-flash {
-  0%, 100% { color: #d33; text-shadow: 0 0 0 transparent; }
-  50%      { color: #fff; text-shadow: 0 0 8px #d33; }
+  color: #d33;
 }
 
 .camera-view .connection-quality-indicator {
