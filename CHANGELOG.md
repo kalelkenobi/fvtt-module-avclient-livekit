@@ -1,5 +1,10 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.7.3k
+
+- fix: revert cameraDock size persistence
+- fix: upgrade recorder integration after API breaking change
+
 ## 0.7.2k
 
 - fix: correct camera dock resize persistence and record/stop button behaviour
