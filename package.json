@@ -1,7 +1,7 @@
 {
   "name": "avclient-livekit",
   "description": "LiveKit A/V module for FoundryVTT",
-  "packageManager": "pnpm@10.33.3",
+  "packageManager": "pnpm@10.33.4",
   "type": "module",
   "private": true,
   "repository": "https://github.com/kalelkenobi/fvtt-module-avclient-livekit",

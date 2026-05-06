@@ -247,7 +247,7 @@ The recorder integration requires a running `livekit-recorder` FastAPI instance 
 4. **Click record** → button flashes + disabled, stop button appears, session created on server.
 5. **Refresh while recording** → on reconnect, UI resumes recording state.
 6. **Reset Room** while no recording → succeeds, new room id has format `[worldId]_[uuid]`.
-7. **Stop → Save** → wait for packaging → WAV download dialog appears → download succeeds.
+7. **Stop → Save** → ZIP download dialog appears → download succeeds.
 8. **Stop → Delete** → session deleted on server, UI returns to idle.
 9. **Stop → Cancel** → recording continues.
 10. **After download** → choose "Delete from server" → DELETE succeeds.

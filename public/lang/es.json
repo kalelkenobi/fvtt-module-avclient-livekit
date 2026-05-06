@@ -98,8 +98,7 @@
   "LIVEKITAVCLIENT.recordingInProgress": "Grabación en curso",
   "LIVEKITAVCLIENT.recorderNotConfigured": "El servicio de grabación no está configurado.",
   "LIVEKITAVCLIENT.recordingStarted": "Grabación iniciada.",
-  "LIVEKITAVCLIENT.recordingStopped": "Grabación detenida. Empaquetando…",
-  "LIVEKITAVCLIENT.recordingPackaged": "La grabación está lista para descargar.",
+  "LIVEKITAVCLIENT.recordingStopped": "Grabación detenida.",
   "LIVEKITAVCLIENT.recordingDeleted": "Grabación eliminada.",
   "LIVEKITAVCLIENT.recordingSilenceTimeout": "Grabación detenida automáticamente por silencio prolongado.",
   "LIVEKITAVCLIENT.recorderErrorStart": "No se pudo iniciar la grabación.",
@@ -113,12 +112,10 @@
   "LIVEKITAVCLIENT.stopDialogSave": "Guardar",
   "LIVEKITAVCLIENT.stopDialogDelete": "Eliminar",
   "LIVEKITAVCLIENT.stopDialogCancel": "Cancelar",
-  "LIVEKITAVCLIENT.downloadDialogTitle": "Grabación lista",
-  "LIVEKITAVCLIENT.downloadDialogContent": "Elige el formato de descarga:",
-  "LIVEKITAVCLIENT.downloadWav": "Descargar WAV",
+  "LIVEKITAVCLIENT.downloadDialogTitle": "Descargar grabación",
+  "LIVEKITAVCLIENT.downloadDialogContent": "¿Descargar la grabación de la sesión como un archivo ZIP?",
   "LIVEKITAVCLIENT.downloadZip": "Descargar ZIP",
   "LIVEKITAVCLIENT.downloadClose": "Cerrar",
   "LIVEKITAVCLIENT.deleteAfterDownloadTitle": "¿Eliminar la grabación del servidor?",
-  "LIVEKITAVCLIENT.deleteAfterDownloadContent": "La descarga ha finalizado. ¿También quieres eliminar esta grabación del servicio de grabación?",
-  "LIVEKITAVCLIENT.packagingInProgress": "Empaquetado en curso, por favor espera…"
+  "LIVEKITAVCLIENT.deleteAfterDownloadContent": "La descarga ha finalizado. ¿También quieres eliminar esta grabación del servicio de grabación?"
 }

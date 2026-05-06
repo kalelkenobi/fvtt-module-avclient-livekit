@@ -72,11 +72,11 @@ just reset              # Deep clean + pnpm install
 `LiveKitRecorder` is composed onto `LiveKitClient` (accessed via `game.webrtc.client._liveKitClient.recorder`):
 
 - **Settings:** `recorderConnectionSettings` (world-scoped, configured via the AV config Server tab)
-- **State machine:** `idle` → `recording` → `stopping` → `packaging` → `idle`
-- **WebSocket:** Long-lived connection for real-time state updates (`recording_started`, `recording_stopped`, `packaging_complete`), with exponential backoff reconnection (1s–30s)
-- **HTTP API:** `start`, `stop`, `delete`, `status`, and `download` (WAV/ZIP) via auth headers
-- **No polling fallback:** All state flows through the WebSocket; packaging completion resolves via a promise-based waiter (`awaitPackaging`)
-- **UI:** A single record-toggle button is injected into the GM's camera dock; its icon and state classes (idle → record circle, recording → stop icon with pulse animation, stopping/packaging → spinner) are driven by recorder state. Stop prompt offers Save/Delete/Cancel; download prompt offers WAV/ZIP/Close + optional delete-after-download.
+- **State machine:** `idle` → `recording` → `stopping` → `idle`
+- **WebSocket:** Long-lived connection for real-time state updates (`recording_started`, `recording_stopped`, plus mix events logged but unused), with exponential backoff reconnection (1s–30s)
+- **HTTP API:** `start`, `stop`, `delete`, `status`, and `download` (ZIP) via auth headers
+- **No polling fallback:** All state flows through the WebSocket; stop finalises inline (no async packaging step)
+- **UI:** A single record-toggle button is injected into the GM's camera dock; its icon and state classes (idle → record circle, recording → stop icon with pulse animation, stopping → spinner) are driven by recorder state. Stop prompt offers Save/Delete/Cancel; download prompt offers ZIP/Close + optional delete-after-download.
 - **Room name format:** `[worldId]_[randomID(32)]` — used consistently across connect and reset flows
 - **Camera dock size persistence:** Vertical dock width is written to Foundry's built-in `client.dockWidth` setting via `ResizeObserver`. Horizontal dock height is persisted in `cameraDockHeight` and re-applied after each render via `requestAnimationFrame` + `MutationObserver` to resist Foundry's own dimension apply.
 

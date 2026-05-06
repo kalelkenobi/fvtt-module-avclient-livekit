@@ -240,7 +240,6 @@ Access via `game.webrtc.client._liveKitClient.uiManager`:
 | `installDockResizeObserver(html)`                           | `void`                     | Observe dock resizes, persist changes    |
 | `disposeDockResizeObserver()`                               | `void`                     | Disconnect resize observer               |
 | `setRecordButtonState(state, sessionId)`                    | `void`                     | Sync record/stop button visibility       |
-| `onRecordingPackaged(sessionId)`                            | `void`                     | Called when packaging completes          |
 
 ---
 
@@ -259,18 +258,16 @@ Access via `game.webrtc.client._liveKitClient.recorder`:
 | `init()`                                                     | `Promise<void>`          | Check active recording, connect WebSocket          |
 | `checkActiveRecording()`                                     | `Promise<{active, sessionId?}>` | GET /recording/status/{room}              |
 | `startRecording()`                                           | `Promise<string \| null>` | Start recording, returns session ID                |
-| `stopRecording()`                                            | `Promise<void>`          | Stop recording, server transitions to packaging    |
+| `stopRecording()`                                            | `Promise<void>`          | Stop recording; server finalises immediately       |
 | `deleteRecording(sessionId)`                                 | `Promise<void>`          | DELETE recording from server                       |
-| `awaitPackaging(sessionId, timeoutMs?)`                      | `Promise<void>`          | Resolves when packaging_complete WS event arrives  |
-| `downloadWav(sessionId)`                                     | `Promise<void>`          | Download WAV via auth fetch → blob                 |
-| `downloadZip(sessionId)`                                     | `Promise<void>`          | Download ZIP via auth fetch → blob                 |
+| `downloadZip(sessionId)`                                     | `Promise<void>`          | Download ZIP containing per-participant Opus files |
 | `dispose()`                                                  | `void`                   | Close WS, clear timers                             |
 
 ### Properties
 
 | Property          | Type                        | Description                                 |
 | ----------------- | --------------------------- | ------------------------------------------- |
-| `state`           | `RecorderState`             | Current state: idle/recording/stopping/packaging |
+| `state`           | `RecorderState`             | Current state: idle/recording/stopping |
 | `activeSessionId` | `string \| null`            | Currently active session ID or null          |
 
 ---

@@ -26,12 +26,11 @@ interface WsTicketResponse {
  * Responsibilities:
  * - HTTP control of the recorder (`start`, `stop`, `delete`, `status`).
  * - Maintaining a long-lived authenticated WebSocket connection that surfaces
- *   `recording_started`, `recording_stopped`, and `packaging_complete` events.
+ *   `recording_started`, `recording_stopped`, and mix events (logged, unused).
  * - Driving the camera-dock UI state via the LiveKitUIManager.
  *
- * Downloads (WAV / ZIP) are exposed as fetch+blob helpers so the API token is
- * never embedded in a URL. The UI layer awaits `awaitPackaging(sessionId)` to
- * know when the WAV is ready before showing the download dialog.
+ * ZIP downloads are exposed via fetch+blob so the API token is never embedded
+ * in a URL. Stop finalises inline — no async packaging step.
  */
 export default class LiveKitRecorder {
   client: LiveKitClient;
@@ -44,7 +43,6 @@ export default class LiveKitRecorder {
   private wsBackoffIndex = 0;
   private wsClosingByUs = false;
   private disposed = false;
-  private packagingResolvers = new Map<string, () => void>();
 
   constructor(client: LiveKitClient) {
     this.client = client;
@@ -151,11 +149,6 @@ export default class LiveKitRecorder {
       }
       this.ws = null;
     }
-    // Reject any pending packaging waiters
-    for (const resolve of this.packagingResolvers.values()) {
-      resolve();
-    }
-    this.packagingResolvers.clear();
     this.wsBackoffIndex = 0;
   }
 
@@ -176,12 +169,12 @@ export default class LiveKitRecorder {
       return { active: false };
     }
     if (!response.ok) {
-        throw new Error(
-          `Recorder status check failed (${String(response.status)}): ${await response.text()}`,
-        );
-      }
-      const body = (await response.json()) as RecorderRoomStatus;
-      return { active: body.is_active, sessionId: body.session_id };
+      throw new Error(
+        `Recorder status check failed (${String(response.status)}): ${await response.text()}`,
+      );
+    }
+    const body = (await response.json()) as RecorderRoomStatus;
+    return { active: body.is_active, sessionId: body.session_id };
   }
 
   /**
@@ -233,9 +226,8 @@ export default class LiveKitRecorder {
   }
 
   /**
-   * Stop the active recording. Capture stops immediately on the server side;
-   * packaging continues asynchronously and finishes with a `packaging_complete`
-   * WS event. Use `awaitPackaging(sessionId)` to block on that event.
+   * Stop the active recording. The server finalises immediately — per-participant
+   * Opus files are closed and the ZIP is available for download right after.
    */
   async stopRecording(): Promise<void> {
     if (!this.isConfigured()) {
@@ -261,7 +253,7 @@ export default class LiveKitRecorder {
       }
       const body = (await response.json()) as RecorderActionResponse;
       this.activeSessionId = body.session_id || this.activeSessionId;
-      this.setState("packaging");
+      this.setState("idle");
       ui.notifications?.info(
         game.i18n?.localize(`${LANG_NAME}.recordingStopped`) ??
           "Recording stopped.",
@@ -315,37 +307,9 @@ export default class LiveKitRecorder {
     }
   }
 
-  /**
-   * Resolve when `packaging_complete` for the given session id arrives. If
-   * the recorder is disposed before that, the promise resolves anyway.
-   */
-  awaitPackaging(sessionId: string, timeoutMs = 5 * 60 * 1000): Promise<void> {
-    if (this.activeSessionId === sessionId && this.state === "idle") {
-      // Already done (e.g. event arrived before we awaited)
-      return Promise.resolve();
-    }
-    return new Promise<void>((resolve) => {
-      const timeout = setTimeout(() => {
-        this.packagingResolvers.delete(sessionId);
-        resolve();
-      }, timeoutMs);
-      this.packagingResolvers.set(sessionId, () => {
-        clearTimeout(timeout);
-        resolve();
-      });
-    });
-  }
-
   /* -------------------------------------------- */
   /*  Downloads                                   */
   /* -------------------------------------------- */
-
-  async downloadWav(sessionId: string): Promise<void> {
-    await this.fetchAndDownload(
-      `${this.getUrl()}/recording/download/${encodeURIComponent(sessionId)}`,
-      `${sessionId}.wav`,
-    );
-  }
 
   async downloadZip(sessionId: string): Promise<void> {
     await this.fetchAndDownload(
@@ -438,20 +402,15 @@ export default class LiveKitRecorder {
           );
         }
         this.activeSessionId = payload.session_id;
-        this.setState("packaging");
-        break;
-
-      case "packaging_complete": {
-        this.activeSessionId = payload.session_id;
-        const resolver = this.packagingResolvers.get(payload.session_id);
-        if (resolver) {
-          this.packagingResolvers.delete(payload.session_id);
-          resolver();
-        }
-        this.client.uiManager.onRecordingPackaged(payload.session_id);
         this.setState("idle");
         break;
-      }
+
+      case "mix_started":
+      case "mix_progress":
+      case "mix_complete":
+      case "mix_failed":
+        log.debug("Mix event:", payload);
+        break;
 
       default:
         log.debug("Unknown recorder event", payload);
@@ -520,13 +479,6 @@ export default class LiveKitRecorder {
       log.error("Recorder download fetch failed", error);
       this.notifyError("recorderErrorDownload");
       throw error;
-    }
-    if (response.status === 202) {
-      ui.notifications?.warn(
-        game.i18n?.localize(`${LANG_NAME}.packagingInProgress`) ??
-          "Packaging in progress, please wait…",
-      );
-      throw new Error("Recording is still packaging");
     }
     if (!response.ok) {
       log.error(

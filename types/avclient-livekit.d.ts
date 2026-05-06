@@ -42,7 +42,7 @@ type LiveKitSettingsConfig = SettingConfig & {
 type BreakoutRoomRegistry = Record<string, string | undefined>;
 
 // Recorder state machine
-type RecorderState = "idle" | "recording" | "stopping" | "packaging";
+type RecorderState = "idle" | "recording" | "stopping";
 
 // Recorder service status response
 interface RecorderRoomStatus {
@@ -51,7 +51,7 @@ interface RecorderRoomStatus {
   is_active: boolean;
   participants?: Record<
     string,
-    { is_receiving: boolean; bytes_written: number }
+    { is_receiving: boolean; samples_written: number }
   >;
 }
 
@@ -65,10 +65,17 @@ interface RecorderActionResponse {
 
 // Recorder WebSocket event payload
 interface RecorderWsEvent {
-  event: "recording_started" | "recording_stopped" | "packaging_complete";
+  event: "recording_started" | "recording_stopped" | "mix_started" | "mix_progress" | "mix_complete" | "mix_failed";
   session_id: string;
   room: string;
   reason?: string;
+  format?: string;
+  progress_pct?: number;
+  started_at?: string;
+  completed_at?: string;
+  size_bytes?: number;
+  error?: string;
+  failed_at?: string;
 }
 
 /**

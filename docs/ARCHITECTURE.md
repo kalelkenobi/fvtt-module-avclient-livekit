@@ -121,7 +121,7 @@ stateDiagram-v2
 
 - **UI elements:** `addConnectionButtons()`, `addConnectionQualityIndicator()`, `setConnectionQualityIndicator()`, `onRenderCameraViews()`
 - **Interaction inputs:** Volume slider overrides, `onAudioPlaybackStatusChanged()`
-- **Recorder controls:** `addRecorderButtons()`, `setRecordButtonState()`, `onRecordingPackaged()`
+- **Recorder controls:** `addRecorderButtons()`, `setRecordButtonState()`
 - **Camera dock persistence:** `applyStoredDockSize()`, `installDockResizeObserver()`, `disposeDockResizeObserver()`
 
 ---
@@ -133,14 +133,12 @@ stateDiagram-v2
 **Key responsibilities:**
 
 - **HTTP API wrappers:** `startRecording()`, `stopRecording()`, `deleteRecording()`, `checkActiveRecording()`
-- **Downloads:** `downloadWav()`, `downloadZip()` — fetch + blob, never embed token in URL
-- **WebSocket:** Long-lived authenticated connection for real-time `recording_started`, `recording_stopped`, and `packaging_complete` events
-- **Packaging waiter:** `awaitPackaging()` — promise-based, resolves when WS `packaging_complete` arrives, with timeout fallback
-
+- **Downloads:** `downloadZip()` — fetch + blob, never embed token in URL
+- **WebSocket:** Long-lived authenticated connection for real-time `recording_started`, `recording_stopped`, and mix events (logged, unused)
 **State machine:**
 
 ```
-idle → recording → stopping → packaging → idle
+idle → recording → stopping → idle
 ```
 
 **WebSocket reconnection:** Exponential backoff (1s, 2s, 4s, 8s, 16s, 30s). On reconnect, re-checks active recording via HTTP.
@@ -270,10 +268,10 @@ Logging wrapper using the [`debug`](https://www.npmjs.com/package/debug) library
 
 - **`LiveKitConnectionSettings`** — server connection parameters and credentials
 - **`SocketMessage`** — inter-client socket message format (actions: breakout, connect, disconnect, render)
-- **`RecorderState`** — recorder state machine: `"idle" | "recording" | "stopping" | "packaging"`
-- **`RecorderRoomStatus`** — `{ is_active: boolean; session_id: string }`
-- **`RecorderActionResponse`** — `{ success: boolean; session_id: string }`
-- **`RecorderWsEvent`** — WebSocket event payload `{ event, room, session_id, reason? }`
+- **`RecorderState`** — recorder state machine: `"idle" | "recording" | "stopping"`
+- **`RecorderRoomStatus`** — `{ room, session_id, is_active, participants? }`
+- **`RecorderActionResponse`** — `{ status, room, session_id, message? }`
+- **`RecorderWsEvent`** — WebSocket event payload `{ event, room, session_id, reason?, ... }`
 - **Global augmentations** — extends Foundry's `SettingConfig` with all module settings types
 
 ---

@@ -111,7 +111,7 @@ export default class LiveKitUIManager {
           });
           break;
         default:
-          // stopping / packaging — disabled, ignore
+          // stopping — disabled, ignore
       }
     });
     element.before(toggleButton);
@@ -165,13 +165,7 @@ export default class LiveKitUIManager {
     }
     // choice === "save"
     try {
-      const packagingDone = this.client.recorder.awaitPackaging(sessionId);
       await this.client.recorder.stopRecording();
-      ui.notifications?.info(
-        game.i18n?.localize(`${LANG_NAME}.packagingInProgress`) ??
-          "Packaging in progress, please wait…",
-      );
-      await packagingDone;
       await this.promptDownload(sessionId);
     } catch (error) {
       log.error("Error during stop+save flow:", error);
@@ -232,23 +226,14 @@ export default class LiveKitUIManager {
         window: { title: `${LANG_NAME}.downloadDialogTitle` },
         content: `<p>${
           game.i18n?.localize(`${LANG_NAME}.downloadDialogContent`) ??
-          "Choose a download format:"
+          "Download the session recording as a ZIP file?"
         }</p>`,
         buttons: [
-          {
-            action: "wav",
-            label: `${LANG_NAME}.downloadWav`,
-            icon: "fa-solid fa-file-audio",
-            default: true,
-            callback: async () => {
-              await recorder.downloadWav(sessionId);
-              return "wav";
-            },
-          },
           {
             action: "zip",
             label: `${LANG_NAME}.downloadZip`,
             icon: "fa-solid fa-file-zipper",
+            default: true,
             callback: async () => {
               await recorder.downloadZip(sessionId);
               return "zip";
@@ -264,7 +249,7 @@ export default class LiveKitUIManager {
         rejectClose: false,
       });
 
-      if (format !== "wav" && format !== "zip") return;
+      if (format !== "zip") return;
 
       const shouldDelete = await foundry.applications.api.DialogV2.confirm({
         window: { title: `${LANG_NAME}.deleteAfterDownloadTitle` },
@@ -299,7 +284,7 @@ export default class LiveKitUIManager {
     if (!(toggle instanceof HTMLElement)) return;
 
     const iconClasses = ["fa-circle", "fa-stop", "fa-spinner", "fa-spin"];
-    const stateClasses = ["idle", "recording", "stopping", "packaging"];
+    const stateClasses = ["idle", "recording", "stopping"];
     toggle.classList.remove(...iconClasses, ...stateClasses, "disabled");
 
     const t = game.i18n?.localize.bind(game.i18n) ?? ((k: string) => k);
@@ -317,25 +302,7 @@ export default class LiveKitUIManager {
         toggle.ariaLabel =
           t(`${LANG_NAME}.recordingInProgress`) || "Recording in progress";
         break;
-      case "packaging":
-        toggle.classList.add("fa-spinner", "fa-spin", "packaging", "disabled");
-        toggle.ariaLabel =
-          t(`${LANG_NAME}.recordingInProgress`) || "Recording in progress";
-        break;
     }
-  }
-
-  /**
-   * Notification hook from `LiveKitRecorder` when the WAV is ready. We let
-   * users know via a UI notification; downloads are triggered explicitly via
-   * the stop -> save flow's `awaitPackaging` await.
-   */
-  onRecordingPackaged(_sessionId: string): void {
-    void _sessionId;
-    ui.notifications?.info(
-      game.i18n?.localize(`${LANG_NAME}.recordingPackaged`) ??
-        "Recording is ready for download.",
-    );
   }
 
   addConnectionQualityIndicator(userId: string): void {
