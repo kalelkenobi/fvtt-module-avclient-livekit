@@ -1,3 +1,4 @@
-onlyBuiltDependencies:
-  - esbuild
-  - "@league-of-foundry-developers/foundry-vtt-types"
+blockExoticSubdeps: false
+allowBuilds:
+  "@league-of-foundry-developers/foundry-vtt-types": true
+  esbuild: true
