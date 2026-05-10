@@ -1,5 +1,14 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.7.4k
+
+- fix: record button style and state not changing
+- update pnpm config for v11 compatibility
+- Replace deprecated onlyBuiltDependencies with allowBuilds
+- Add blockExoticSubdeps: false for git-hosted subdependencies
+- Bump vite to 8.0.11
+- chore: update github action
+
 ## 0.7.3k
 
 - fix: revert cameraDock size persistence
