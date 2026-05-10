@@ -5,6 +5,10 @@ on:
 
 name: Release FoundryVTT Module
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   check_version:
     name: Check FoundryVTT module version
@@ -29,6 +33,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: check_version
     if: ${{ needs.check_version.outputs.module_current_version != needs.check_version.outputs.module_previous_version }}
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -39,6 +45,7 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v6
         with:
+          node-version-file: ".nvmrc"
           cache: "pnpm"
       - name: Create tag changelog
         id: changelog
@@ -52,49 +59,31 @@ jobs:
           } >> "$GITHUB_OUTPUT"
       - name: Update download URL
         id: update_module_download_url
-        uses: microsoft/variable-substitution@v1
-        with:
-          files: "module.json"
         env:
-          download: https://github.com/${{ github.repository }}/releases/download/${{ needs.check_version.outputs.module_current_version }}/${{ github.event.repository.name }}.zip
+          DOWNLOAD_URL: https://github.com/${{ github.repository }}/releases/download/${{ needs.check_version.outputs.module_current_version }}/${{ github.event.repository.name }}.zip
+        run: |
+          jq --arg url "$DOWNLOAD_URL" '.download = $url' module.json > module.json.tmp
+          mv module.json.tmp module.json
       - name: Install dependencies
         id: install_dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
       - name: Build package
         id: build
         run: pnpm run build
       - name: Package module
         working-directory: ./dist
-        run: |
-          zip -r ../${{ github.event.repository.name }}.zip *
+        run: zip -r ../${{ github.event.repository.name }}.zip .
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ needs.check_version.outputs.module_current_version }}
-          release_name: Release ${{ needs.check_version.outputs.module_current_version }}
+          name: Release ${{ needs.check_version.outputs.module_current_version }}
           body: ${{ steps.changelog.outputs.changelog }}
           draft: false
           prerelease: true
-      - name: Upload module zip
-        id: upload-module-zip
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./${{ github.event.repository.name }}.zip
-          asset_name: ${{ github.event.repository.name }}.zip
-          asset_content_type: application/zip
-      - name: Upload module json
-        id: upload-module-json
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./module.json
-          asset_name: module.json
-          asset_content_type: application/json
+          files: |
+            ./${{ github.event.repository.name }}.zip
+            ./module.json
