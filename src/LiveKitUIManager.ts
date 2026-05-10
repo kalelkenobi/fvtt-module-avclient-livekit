@@ -76,7 +76,7 @@ export default class LiveKitUIManager {
     const toggleButton = document.createElement("button");
     toggleButton.type = "button";
     toggleButton.className =
-      "av-control inline-control toggle icon fa-solid fa-fw livekit-control record-toggle";
+      "av-control inline-control toggle icon fa-solid fa-fw fa-circle livekit-control record-toggle";
     toggleButton.dataset.tooltip = "";
     toggleButton.ariaLabel =
       game.i18n.localize(`${LANG_NAME}.recordStart`);
@@ -132,28 +132,37 @@ export default class LiveKitUIManager {
     }
     const choice = await this.promptStopChoice();
     if (choice === "cancel") return;
+    
+    try {
+      await this.client.recorder.stopRecording();
+    } catch (error) {
+      log.error("Error stopping recording:", error);
+      ui.notifications?.error(
+        game.i18n?.localize(`${LANG_NAME}.recorderErrorStop`) ??
+          "Could not stop recording.",
+      );
+    }
+
     if (choice === "delete") {
       try {
-        await this.client.recorder.stopRecording();
         await this.client.recorder.deleteRecording(sessionId);
       } catch (error) {
-        log.error("Error during stop+delete flow:", error);
+        log.error("Error deleting recording:", error);
         ui.notifications?.error(
           game.i18n?.localize(`${LANG_NAME}.recorderErrorStop`) ??
-            "Could not stop recording.",
+            "Could not delete recording.",
         );
       }
       return;
     }
     // choice === "save"
     try {
-      await this.client.recorder.stopRecording();
-      await this.promptDownload(sessionId);
+      await this.client.recorder.downloadZip(sessionId);
     } catch (error) {
-      log.error("Error during stop+save flow:", error);
+      log.error("Error saving recording:", error);
       ui.notifications?.error(
         game.i18n?.localize(`${LANG_NAME}.recorderErrorStop`) ??
-          "Could not stop recording.",
+          "Could not save recording.",
       );
     }
   }
@@ -200,55 +209,6 @@ export default class LiveKitUIManager {
     }
   }
 
-  private async promptDownload(sessionId: string): Promise<void> {
-    const recorder = this.client.recorder;
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-      const format: unknown = await (foundry.applications.api.DialogV2 as any).wait({
-        window: { title: `${LANG_NAME}.downloadDialogTitle` },
-        content: `<p>${
-          game.i18n?.localize(`${LANG_NAME}.downloadDialogContent`) ??
-          "Download the session recording as a ZIP file?"
-        }</p>`,
-        buttons: [
-          {
-            action: "zip",
-            label: `${LANG_NAME}.downloadZip`,
-            icon: "fa-solid fa-file-zipper",
-            default: true,
-            callback: async () => {
-              await recorder.downloadZip(sessionId);
-              return "zip";
-            },
-          },
-          {
-            action: "close",
-            label: `${LANG_NAME}.downloadClose`,
-            icon: "fa-solid fa-xmark",
-            callback: () => "close",
-          },
-        ],
-        rejectClose: false,
-      });
-
-      if (format !== "zip") return;
-
-      const shouldDelete = await foundry.applications.api.DialogV2.confirm({
-        window: { title: `${LANG_NAME}.deleteAfterDownloadTitle` },
-        content: `<p>${
-          game.i18n?.localize(`${LANG_NAME}.deleteAfterDownloadContent`) ??
-          "Delete this recording from the server?"
-        }</p>`,
-        rejectClose: false,
-      });
-      if (shouldDelete) {
-        await recorder.deleteRecording(sessionId);
-      }
-    } catch (error: unknown) {
-      log.warn("Download dialog error or cancelled:", error);
-    }
-  }
-
   /**
    * Update the record-toggle button icon, classes, and label based on the
    * recorder's current state. Called by `LiveKitRecorder` on every state
@@ -256,31 +216,23 @@ export default class LiveKitUIManager {
    */
   setRecordButtonState(state: RecorderState, _sessionId: string | null): void {
     void _sessionId;
-    const userCameraView = document.querySelector(
-      `.camera-view[data-user="${game.user?.id ?? ""}"]`,
-    );
-    if (!userCameraView) return;
-    const toggle = userCameraView.querySelector(
-      ".livekit-control.record-toggle",
-    );
+    const toggle = document.querySelector("#camera-views .user-controls .record-toggle");
     if (!(toggle instanceof HTMLElement)) return;
-
-    const iconClasses = ["fa-circle", "fa-stop", "fa-spinner", "fa-spin"];
-    const stateClasses = ["idle", "recording", "stopping"];
-    toggle.classList.remove(...iconClasses, ...stateClasses, "disabled");
 
     const t = game.i18n?.localize.bind(game.i18n) ?? ((k: string) => k);
     switch (state) {
       case "idle":
-        toggle.classList.add("fa-circle", "idle");
+        toggle.classList.remove("disabled", "recording");
         toggle.ariaLabel = t(`${LANG_NAME}.recordStart`) || "Start recording";
         break;
       case "recording":
-        toggle.classList.add("fa-stop", "recording");
+        toggle.classList.remove("disabled");
+        toggle.classList.add("recording");
         toggle.ariaLabel = t(`${LANG_NAME}.recordStop`) || "Stop recording";
         break;
       case "stopping":
-        toggle.classList.add("fa-spinner", "fa-spin", "stopping", "disabled");
+        toggle.classList.remove("recording");
+        toggle.classList.add("disabled");
         toggle.ariaLabel =
           t(`${LANG_NAME}.recordingInProgress`) || "Recording in progress";
         break;

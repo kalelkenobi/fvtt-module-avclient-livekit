@@ -1,27 +1,15 @@
-.camera-view .av-control.toggle .fa-closed-captioning.active {
-  color: #fff;
-}
-
-.camera-view .av-control.livekit-control.hidden {
-  display: none;
-}
-
-.camera-view .av-control.livekit-control.disabled {
-  pointer-events: none;
-}
-
-/* Recorder controls */
-.camera-view .av-control.livekit-control.record-toggle {
+#camera-views .user-controls .record-toggle {
   color: #d33;
 }
 
-.camera-view .av-control.livekit-control.record-toggle.disabled {
-  pointer-events: none;
-  opacity: 0.5;
+#camera-views .user-controls .record-toggle.recording {
+  animation: livekit-record-flash 1s infinite ease-in-out;
+  opacity: 0.85;
 }
 
-.camera-view .av-control.livekit-control.record-toggle.recording {
-  color: #d33;
+@keyframes livekit-record-flash {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
 }
 
 .camera-view .connection-quality-indicator {
@@ -78,13 +66,6 @@
 
 .camera-view .control-bar.left {
   z-index: 30;
-}
-
-/* HACK: Needed due to a bug in FVTT v13 */
-.camera-view .video-container .user-camera {
-  height: 100%;
-  width: 100%;
-  object-fit: cover;
 }
 
 /* HACK: Needed due to a bug in FVTT v13 - flip the local camera */
