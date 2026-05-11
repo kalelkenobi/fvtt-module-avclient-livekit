@@ -75,8 +75,8 @@ export default class LiveKitUIManager {
       // Nothing captured yet (first render after page load).
       if (!this.cameraDockSize.width && !this.cameraDockSize.height) return;
 
-      host.style.width = this.cameraDockSize.width;
-      host.style.height = this.cameraDockSize.height;
+      if(host.classList.contains("vertical")) host.style.width = this.cameraDockSize.width;
+      if(host.classList.contains("horizontal")) host.style.height = this.cameraDockSize.height;
     });
   }
 
