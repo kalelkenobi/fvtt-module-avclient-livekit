@@ -1,5 +1,9 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.7.5k
+
+- fix: prevent re-rendering from overriding user resize of AV dock
+
 ## 0.7.4k
 
 - fix: record button style and state not changing
