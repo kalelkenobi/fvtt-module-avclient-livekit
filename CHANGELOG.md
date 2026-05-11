@@ -1,5 +1,9 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.7.6k
+
+- fix: clean-up dock size persistence
+
 ## 0.7.5k
 
 - fix: prevent re-rendering from overriding user resize of AV dock
