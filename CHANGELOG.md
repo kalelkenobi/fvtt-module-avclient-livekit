@@ -1,5 +1,9 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.7.8k
+
+- fix: final fix to size
+
 ## 0.7.7k
 
 - fix: third-try on camera dock size persistence
