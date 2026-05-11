@@ -8,9 +8,7 @@ A replacement for the native SimplePeer / EasyRTC A/V client in FoundryVTT. The 
 >
 > The LiveKit AVClient does not remove the need for SSL (https) on your Foundry server. All modern browsers require that the page that A/V is viewed on be secured. You can follow the following guide to set up SSL on your Foundry server: [Foundry VTT - SSL & HTTPS](https://foundryvtt.com/article/ssl/)
 
-**Note:** _You must configure a custom LiveKit signaling server under Audio/Video communication. See [Running your own LiveKit server](#running-your-own-livekit-server) below, or use one of the following hosted options:_
-
-[LiveKit Cloud](https://livekit.io/) provides a free tier, for a limited number of minutes/bandwidth per month. It may not be suitable for larger games or frequent use.
+**Note:** _You must configure a LiveKit signaling server under Audio/Video communication. You can host your own (see the [official LiveKit self-hosting guide](https://docs.livekit.io/home/self-hosting/deployment/)) or use a hosted option such as [LiveKit Cloud](https://livekit.io/) (free tier with limited minutes/bandwidth per month — may not be suitable for larger games or frequent use)._
 
 ## Installation
 
@@ -24,11 +22,20 @@ Install & enable the module then configure for your LiveKit instance under Audio
 **LiveKit API Key:** `ABCDEFGHIJ12345` \<Your LiveKit API Key>  
 **LiveKit Secret Key:** `****************` \<Your LiveKit Secret Key\>
 
+### Recorder Service (optional)
+
+To enable GM session recording, configure a running [livekit-recorder](https://github.com/kalelkenobi/livekit-recorder) service under the **Server** tab of the Audio/Video Configuration (GM-only settings):
+
+**Recorder URL:** `https://recorder.example.com` \<Base URL of your recorder service\>  
+**Recorder API Token:** `****************` \<Bearer token for recorder API authentication\>
+
+Once configured, a record/stop button pair appears in the GM's camera dock.
+
 ## Features
 
 LiveKit AVClient provides a number of features beyond the A/V option built into Foundry:
 
-- Uses a Selective Forwarding Unit (SFU) architecture instead of Mesh. This means each user only has to send their their audio and video once instead of needing to connect to every other user in the game.
+- Uses a Selective Forwarding Unit (SFU) architecture instead of Mesh. This means each user only has to send their audio and video once instead of needing to connect to every other user in the game.
 - LiveKit server connections work in more network environments.
 - [Breakout Rooms](#breakout-rooms) allow you to split the party!
 - Adaptive Streaming and Dynamic Broadcasting reduce bandwidth and CPU usage based on video window size and available system resources.
@@ -37,7 +44,11 @@ LiveKit AVClient provides a number of features beyond the A/V option built into 
 - An optional external web client can be used to open audio and video in a separate tab, or even separate device (including mobile).
 - The ability for individual users to disable receiving video in case they are on very limited connections.
 - The ability to individually hide or mute users only for yourself.
-- Advanced Audio Mode to tune audio publishing settings for audio streamed by your account.
+- **Advanced Settings Mode** — granular tuning of audio capture (AGC, echo cancellation, noise suppression, voice isolation), Opus encoding (bitrate, DTX, RED), and video codec selection (VP8/VP9/AV1/H.264/H.265 with configurable backup codec).
+- **Secondary audio source with per-channel gain** — mix a second microphone into your outbound audio track with independent gain controls for each source.
+- **Optional auto-connect** — control whether the module connects to the LiveKit server automatically on world load.
+- **Reset Meeting Room** — regenerate the meeting-room ID without re-entering server credentials (GM-only).
+- **[GM Session Recording](#recording-sessions)** — record each participant's audio to per-user Opus files, downloadable as a ZIP, via an external recorder service.
 
 ## How to use
 
@@ -48,6 +59,18 @@ A GM can now split the party!
 To start a breakout room, right-click on the player you would like to break out in the player list and select `Start A/V breakout`. You will join a different A/V session with that user. You can now right-click on other users and pull them into the breakout room, or start yet another breakout room with another user.
 
 Though the GM will always join the breakout room on creation, they can leave the breakout room themselves by right-clicking on their own username and selecting `Leave A/V Breakout`. Users can also leave a breakout at any time by right-clicking on their own name, and the GM can end all breakout rooms by selecting `End all A/V breakouts`.
+
+### **Recording Sessions**
+
+When a [recorder service](#recorder-service-optional) is configured, a record/stop button pair appears in the GM's camera dock. Non-GM players see no recording controls.
+
+To start a recording, click the record button (red circle). The button pulses while recording is active. To stop, click the stop button, which prompts:
+
+- **Save** — stops the recording and downloads a ZIP containing per-participant Opus audio files.
+- **Delete** — stops the recording and deletes it from the server immediately.
+- **Cancel** — dismisses the prompt and continues recording.
+
+If the page is refreshed while a recording is active, the UI resumes the recording state automatically on reconnect.
 
 ## Debugging
 

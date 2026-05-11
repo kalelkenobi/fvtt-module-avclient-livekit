@@ -76,7 +76,8 @@ just reset              # Deep clean + pnpm install
 - **WebSocket:** Long-lived connection for real-time state updates (`recording_started`, `recording_stopped`, plus mix events logged but unused), with exponential backoff reconnection (1s–30s)
 - **HTTP API:** `start`, `stop`, `delete`, `status`, and `download` (ZIP) via auth headers
 - **No polling fallback:** All state flows through the WebSocket; stop finalises inline (no async packaging step)
-- **UI:** A single record-toggle button is injected into the GM's camera dock; its icon and state classes (idle → record circle, recording → stop icon with pulse animation, stopping → spinner) are driven by recorder state. Stop prompt offers Save/Delete/Cancel; download prompt offers ZIP/Close + optional delete-after-download.
+- **UI:** A record/stop button pair is injected into the GM's camera dock; the buttons are toggled by recorder state (idle → record circle visible, recording → stop icon with pulse animation visible, stopping → spinner). Stop prompt offers Save/Delete/Cancel; download prompt offers ZIP/Close + optional delete-after-download.
+- **WebSocket auth:** Before opening the WS connection, the client calls `POST /ws-ticket` with the bearer token to obtain a short-lived ticket, which is then passed as a query parameter on the WS upgrade URL (keeps the bearer token out of WS URLs).
 - **Room name format:** `[worldId]_[randomID(32)]` — used consistently across connect and reset flows
 
 **Testing:** No test framework. Validation is via TypeScript compilation, ESLint, and manual QA (checklist in `docs/CONTRIBUTING.md`).

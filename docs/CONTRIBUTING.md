@@ -9,8 +9,8 @@ This guide covers everything you need to set up a local development environment,
 | Tool | Version | Notes |
 |------|---------|-------|
 | [Node.js](https://nodejs.org/) | 18+ | LTS recommended |
-| [pnpm](https://pnpm.io/) | 10.28+ | Specified via `packageManager` in `package.json`; install with `corepack enable` |
-| [FoundryVTT](https://foundryvtt.com/) | v13+ | Running locally on port 30000 |
+| [pnpm](https://pnpm.io/) | 11.0+ | Specified via `packageManager` in `package.json`; install with `corepack enable` |
+| [FoundryVTT](https://foundryvtt.com/) | v13+ (verified v14) | Running locally on port 30000 |
 | [just](https://github.com/casey/just) | Latest | Optional — provides convenience commands |
 
 ---
@@ -183,7 +183,7 @@ Strict mode is enabled with additional checks:
 
 ### Enable Debug Logging
 
-In Foundry module settings, enable **"Enable debug logging"**. This activates the `debug` library's namespaced loggers at the `DEBUG`, `INFO`, `WARN`, and `ERROR` levels.
+`INFO`, `WARN`, and `ERROR` log levels are always active. In Foundry module settings, enable **"Enable debug logging"** to additionally activate `DEBUG` (and optionally `TRACE`) level output.
 
 ### Enable Trace Logging
 
@@ -211,7 +211,7 @@ game.webrtc.client._liveKitClient.getUserStatistics("userId");
 game.webrtc.client._liveKitClient.getAllUserStatistics();
 
 // Start screen sharing (unsupported debug feature)
-game.webrtc.client._liveKitClient.shareScreen(true);
+game.webrtc.client._liveKitClient.trackManager.shareScreen(true);
 
 // Send a socket command to all users
 game.socket.emit("module.avclient-livekit", { action: "render" });

@@ -56,12 +56,12 @@ The entry point does two things:
 
 **Connection flow in `connect()`:**
 
-1. Determines the server type and retrieves connection settings.
-2. Generates a JWT access token locally via `getAccessToken()`.
-3. Creates and configures a LiveKit `Room` via `LiveKitClient`.
+1. Checks the `autoConnect` setting; skips connection on first call if disabled.
+2. Reads and migrates connection settings (legacy settings support).
+3. Generates a JWT access token locally via `getAccessToken()`.
 4. Connects to the LiveKit server with the token.
 5. Publishes local audio/video tracks.
-6. Fires `liveKitClientAvailable` and `liveKitClientInitialized` hooks.
+6. Fires the `liveKitClientInitialized` hook.
 
 ---
 
@@ -75,7 +75,7 @@ The entry point does two things:
 - **Participant handling:** `addAllParticipants()`, `onParticipantConnected()`, `onParticipantDisconnected()`, `getParticipantFVTTUser()`
 - **Event handling:** `onConnected()`, `onDisconnected()`, `onReconnecting()`, `onReconnected()`
 - **Socket events:** `onSocketEvent()` — handles breakout, connect, disconnect, and render commands
-- **Manager coordination:** Exposes `trackManager` and `uiManager` for direct access by callers
+- **Manager coordination:** Exposes `trackManager`, `uiManager`, and `recorder` for direct access by callers
 
 **Architecture note:** `LiveKitClient` follows a composition pattern with specialized managers. Callers access track, UI, and recorder functionality directly through the manager instances. For example:
 
@@ -110,8 +110,9 @@ stateDiagram-v2
 - **Track management:** `initializeLocalTracks()`, `initializeAudioTrack()`, `initializeVideoTrack()`, `changeAudioSource()`, `changeVideoSource()`
 - **Track attachment:** `attachAudioTrack()`, `attachVideoTrack()`, `getUserAudioTrack()`, `getUserVideoTrack()`
 - **Track mixing:** `createMixedAudioTrack()`, `cleanupMixer()`
-- **Audio configuration:** `getAudioParams()` with advanced tuning option, `trackPublishOptions()`
-- **Screen sharing:** `shareScreen()`
+- **Gain control:** `setPrimaryGain(percent)`, `setSecondaryGain(percent)` — adjust per-source gain nodes in the Web Audio mixer
+- **Audio configuration:** `getAudioParams()`, `applyAdvancedAudioOptions()`, `applyAdvancedTrackOptions()`, `trackPublishOptions`
+- **Screen sharing:** `shareScreen(enabled)`
 
 ### `LiveKitUIManager` (`src/LiveKitUIManager.ts`)
 
@@ -120,8 +121,9 @@ stateDiagram-v2
 **Key responsibilities:**
 
 - **UI elements:** `addConnectionButtons()`, `addConnectionQualityIndicator()`, `setConnectionQualityIndicator()`, `onRenderCameraViews()`
-- **Interaction inputs:** Volume slider overrides, `onAudioPlaybackStatusChanged()`
 - **Recorder controls:** `addRecorderButtons()`, `setRecordButtonState()`
+- **Interaction inputs:** Volume slider overrides, `onAudioPlaybackStatusChanged()`
+- **Dock resize:** `ensureCameraDockResizePersistence()` — observes and restores camera dock dimensions across page loads
 
 ---
 
@@ -132,15 +134,22 @@ stateDiagram-v2
 **Key responsibilities:**
 
 - **HTTP API wrappers:** `startRecording()`, `stopRecording()`, `deleteRecording()`, `checkActiveRecording()`
-- **Downloads:** `downloadZip()` — fetch + blob, never embed token in URL
-- **WebSocket:** Long-lived authenticated connection for real-time `recording_started`, `recording_stopped`, and mix events (logged, unused)
+- **Downloads:** `downloadZip()` — fetch + blob, never embeds token in URL
+- **WebSocket:** Long-lived authenticated connection for real-time `recording_started`, `recording_stopped`, and mix events
+
+**WebSocket authentication:** The recorder uses a ticket-based WS auth flow. Before opening the WebSocket, the client sends `POST /ws-ticket` (with the bearer token in the `Authorization` header) to obtain a short-lived ticket. The ticket is then passed as a query parameter when upgrading to the WebSocket connection, keeping the bearer token out of the WS URL.
+
 **State machine:**
 
-```
-idle → recording → stopping → idle
+```mermaid
+stateDiagram-v2
+    [*] --> idle
+    idle --> recording: startRecording()
+    recording --> stopping: stopRecording()
+    stopping --> idle: server confirms stop
 ```
 
-**WebSocket reconnection:** Exponential backoff (1s, 2s, 4s, 8s, 16s, 30s). On reconnect, re-checks active recording via HTTP.
+**WebSocket reconnection:** Exponential backoff (1s, 2s, 4s, 8s, 16s, 30s). On reconnect, re-checks active recording via HTTP. Mix events (`mix_started`, `mix_progress`, `mix_complete`, `mix_failed`) are received and logged but not otherwise acted upon.
 
 ---
 
@@ -157,7 +166,7 @@ idle → recording → stopping → idle
 
 | Template                | Purpose                                                |
 | ----------------------- | ------------------------------------------------------ |
-| `templates/server.hbs`  | Server configuration: custom URL/API key/secret fields |
+| `templates/server.hbs`  | Server configuration: custom URL/API key/secret fields, plus recorder URL/token |
 | `templates/livekit.hbs` | Module-specific settings rendered as form groups       |
 
 ---
@@ -216,20 +225,33 @@ Registers all FoundryVTT hooks:
 
 Registers all module settings with Foundry's settings API:
 
-| Setting Key                 | Scope  | Description                                    |
-| --------------------------- | ------ | ---------------------------------------------- |
-| `displayConnectionQuality`  | client | Show connection quality indicator dots         |
-| `liveKitConnectionSettings` | world  | Server configuration parameters                |
-| `breakoutRoomRegistry`      | client | Current breakout room assignments              |
-| `audioMusicMode`            | client | Tune audio for music streaming                 |
-| `useExternalAV`             | client | Open A/V in a separate browser window          |
-| `resetRoom`                 | world  | Generate a new room ID (GM-only trigger)       |
-| `recorderConnectionSettings` | world  | Recorder service configuration (Server tab)  |
-| `cameraDockHeight`          | client | Persisted height for horizontal dock layout   |
-| `debug`                     | world  | Enable debug-level logging                     |
-| `liveKitTrace`              | world  | Enable LiveKit SDK trace-level logging         |
-| `devMode`                   | world  | Expose developer-only settings                 |
-| `forceTurn`                 | world  | Force TURN relay (dev mode only)               |
+| Setting Key                   | Scope  | Description                                                           |
+| ----------------------------- | ------ | --------------------------------------------------------------------- |
+| `secondaryAudioSrc`           | client | Secondary mic device id (or `"disabled"`)                            |
+| `autoConnect`                 | client | Auto-connect to the LiveKit server on world load                      |
+| `displayConnectionQuality`    | client | Show connection quality indicator dots on camera views                |
+| `liveKitConnectionSettings`   | world  | Server URL, room ID, API key, secret key                              |
+| `breakoutRoomRegistry`        | client | Current breakout room assignments (userId → roomId)                   |
+| `useExternalAV`               | client | Open A/V in a separate browser window/device                          |
+| `advancedSettingsMode`        | client | Reveal advanced audio/video options                                   |
+| `primaryAudioGain`            | client | Primary-source gain 0–200% (visible when secondary source is active)  |
+| `secondaryAudioGain`          | client | Secondary-source gain 0–200% (visible when secondary source is active)|
+| `advancedSettingsTargetSource`| client | Which source advanced options apply to (`both`/`primary`/`secondary`) |
+| `autoGainControl`             | client | Automatic gain control on capture (advanced mode)                     |
+| `echoCancellation`            | client | Echo cancellation on capture (advanced mode)                          |
+| `noiseSuppression`            | client | Noise suppression on capture (advanced mode)                          |
+| `voiceIsolation`              | client | Voice isolation on capture (advanced mode)                            |
+| `audioBitRate`                | client | Opus bitrate in kbps, 8–510 step 8 (advanced mode)                   |
+| `dtx`                         | client | Discontinuous transmission on audio (advanced mode)                   |
+| `red`                         | client | Redundant audio data encoding (advanced mode)                         |
+| `videoCodec`                  | client | Primary video codec: `vp8`/`vp9`/`av1`/`h264`/`h265` (advanced mode)|
+| `backupCodec`                 | client | Backup video codec: `vp8`/`h264` (advanced mode)                     |
+| `resetRoom`                   | world  | Trigger to generate a new meeting room ID (GM-only)                   |
+| `recorderConnectionSettings`  | world  | Recorder service base URL and API token                               |
+| `debug`                       | world  | Enable debug-level logging                                            |
+| `liveKitTrace`                | world  | Enable LiveKit SDK trace-level logging (visible when debug is on)     |
+| `devMode`                     | world  | Expose developer-only settings (visible in dev builds)                |
+| `forceTurn`                   | world  | Force TURN relay connections (dev mode only)                          |
 
 ### `utils/constants.ts`
 
@@ -247,17 +269,16 @@ General-purpose utilities:
 | Export                           | Description                                                     |
 | -------------------------------- | --------------------------------------------------------------- |
 | `buildRoomName()`                | Generate persistent room name `[worldId]_[randomID(32)]`        |
-| `formatRecorderTimestamp()`      | Generate session ID in `YYYY-MM-DD_HH:mm:ss` format             |
+| `formatRecorderTimestamp()`      | Generate session ID in `YYYY-MM-DD_HH-mm-ss` format             |
 | `delayReload()`                  | Debounced (100ms) page reload                                   |
-| `debounceRender()`               | Debounced (200ms) WebRTC render                                 |
 | `debounceRefreshView(userId)`    | Debounced (200ms) per-user camera view refresh                  |
-| `sleep(delay)`                   | Promise-based delay                                             |
 | `callWhenReady(fn)`              | Execute immediately if game is ready, otherwise hook on `ready` |
-| `deviceInfoToObject(list, kind)` | Convert device list to `{id: label}` map                        |
 
 ### `utils/logger.ts`
 
 Logging wrapper using the [`debug`](https://www.npmjs.com/package/debug) library. Creates namespaced loggers at five levels: `TRACE`, `DEBUG`, `INFO`, `WARN`, `ERROR`. Each level maps to the corresponding `console.*` method. Logger namespaces follow the pattern `avclient-livekit:LEVEL:prefix`.
+
+`INFO`, `WARN`, and `ERROR` are always enabled. `DEBUG` and `TRACE` are only active when the `debug` module setting is on.
 
 ---
 
@@ -266,6 +287,7 @@ Logging wrapper using the [`debug`](https://www.npmjs.com/package/debug) library
 `types/avclient-livekit.d.ts` defines:
 
 - **`LiveKitConnectionSettings`** — server connection parameters and credentials
+- **`RecorderConnectionSettings`** — recorder service URL and API token
 - **`SocketMessage`** — inter-client socket message format (actions: breakout, connect, disconnect, render)
 - **`RecorderState`** — recorder state machine: `"idle" | "recording" | "stopping"`
 - **`RecorderRoomStatus`** — `{ room, session_id, is_active, participants? }`
@@ -308,9 +330,9 @@ The module uses Foundry's socket system (`module.avclient-livekit`) for coordina
 | Action       | Direction   | Purpose                                        |
 | ------------ | ----------- | ---------------------------------------------- |
 | `breakout`   | GM → Player | Assign/remove a player to/from a breakout room |
-| `connect`    | Any → All   | Command all clients to reconnect               |
-| `disconnect` | Any → All   | Command all clients to disconnect              |
-| `render`     | Any → All   | Command all clients to re-render camera views  |
+| `connect`    | GM → All    | Command all clients to reconnect               |
+| `disconnect` | GM → All    | Command all clients to disconnect              |
+| `render`     | GM → All    | Command all clients to re-render camera views  |
 
 ---
 
@@ -349,5 +371,8 @@ All user-facing strings use the `LIVEKITAVCLIENT.*` localization namespace.
 - Connection quality indicator dots (excellent/good/poor/unknown)
 - Remote user hide/mute status icons
 - Push-to-talk status indicator
-- Custom LiveKit control buttons
-- Camera view layout fixes for FoundryVTT v13
+- Custom LiveKit control buttons, including:
+  - `.livekit-control.record` — record button (red circle)
+  - `.livekit-control.record.recording` — active recording state (pulsing animation)
+  - `.livekit-control.record-stop` — stop button (shown while recording)
+- Camera view layout fixes for FoundryVTT v13+
