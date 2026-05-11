@@ -11,8 +11,77 @@ export default class LiveKitUIManager {
   client: LiveKitClient;
   windowClickListener: EventListener | null = null;
 
+  // Track user-driven resizes of the #camera-views dock so they survive
+  // re-renders triggered by AVMaster.render(). In-memory only — resets on
+  // page reload.
+  private cameraDockSize: { width: number | null; height: number | null } = {
+    width: null,
+    height: null,
+  };
+  private cameraDockResizeObserver: ResizeObserver | null = null;
+  private observedDockElement: HTMLElement | null = null;
+  private suppressNextResizeCapture = false;
+
   constructor(client: LiveKitClient) {
     this.client = client;
+  }
+
+  /**
+   * Restore any captured user resize for the #camera-views dock and ensure a
+   * ResizeObserver is attached so subsequent user resizes are remembered.
+   * Axis-aware: restores width only in vertical layout, height only in
+   * horizontal layout (matching the CSS resize rules).
+   */
+  private ensureCameraDockResizePersistence(host: HTMLElement): void {
+    const isMinimized = host.classList.contains("minimized");
+
+    // 1. Restore the axis-appropriate dimension. Do not clear cameraDockSize
+    //    while minimized — un-minimizing should restore the prior size.
+    if (!isMinimized) {
+      const isVertical = host.classList.contains("vertical");
+      const isHorizontal = host.classList.contains("horizontal");
+
+      if (isVertical && this.cameraDockSize.width !== null) {
+        host.style.width = `${this.cameraDockSize.width}px`;
+        
+        // Swallow the observer entry that fires as a result of our own write.
+        this.suppressNextResizeCapture = true;
+      }
+      if (isHorizontal && this.cameraDockSize.height !== null) {
+        host.style.height = `${this.cameraDockSize.height}px`;
+        
+        // Swallow the observer entry that fires as a result of our own write.
+        this.suppressNextResizeCapture = true;
+      }
+    }
+
+    // 2. (Re-)attach ResizeObserver to whichever #camera-views element is now
+    //    live in the DOM. ApplicationV2 may replace the node on re-render.
+    if (this.observedDockElement !== host) {
+      this.cameraDockResizeObserver?.disconnect();
+      this.observedDockElement = host;
+
+      this.cameraDockResizeObserver ??= new ResizeObserver((entries) => {
+        if (this.suppressNextResizeCapture) {
+          this.suppressNextResizeCapture = false;
+          return;
+        }
+        const entry = entries[0];
+        if (!entry) return;
+        const target = entry.target;
+        if (!(target instanceof HTMLElement)) return;
+        // Don't capture while minimized — CSS strips the resize affordance.
+        if (target.classList.contains("minimized")) return;
+
+        const { width, height } = entry.contentRect;
+        if (target.classList.contains("vertical")) {
+          this.cameraDockSize.width = width;
+        } else if (target.classList.contains("horizontal")) {
+          this.cameraDockSize.height = height;
+        }
+      });
+      this.cameraDockResizeObserver.observe(host);
+    }
   }
 
   addConnectionButtons(element: HTMLElement): void {
@@ -329,6 +398,18 @@ export default class LiveKitUIManager {
     _cameraviews: foundry.applications.apps.av.CameraViews,
     html: HTMLElement,
   ): void {
+    // Persist user-resized dock dimensions across re-renders. `html` is the
+    // CameraViews application root (#camera-views); fall back defensively in
+    // case that contract ever changes.
+    const dock =
+      html.id === "camera-views"
+        ? html
+        : ((html.closest("#camera-views") as HTMLElement | null) ??
+          document.getElementById("camera-views"));
+    if (dock instanceof HTMLElement) {
+      this.ensureCameraDockResizePersistence(dock);
+    }
+
     const userId = game.user?.id;
     if (!userId) {
       log.error("No user ID found; cannot render camera views");
