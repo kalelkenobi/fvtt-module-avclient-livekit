@@ -20,7 +20,8 @@ export default class LiveKitUIManager {
   };
   private cameraDockResizeObserver: ResizeObserver | null = null;
   private observedDockElement: HTMLElement | null = null;
-  
+  private pendingRestoreFrame: number | null = null;
+
   constructor(client: LiveKitClient) {
     this.client = client;
   }
@@ -28,18 +29,15 @@ export default class LiveKitUIManager {
   /**
    * Restore any captured user resize for the #camera-views dock and ensure a
    * ResizeObserver is attached so subsequent user resizes are remembered.
+   *
+   * The restore is deferred to the next animation frame because Foundry's
+   * CameraViews application calls `_updatePosition` *after* the
+   * `renderCameraViews` hook returns, which wipes inline width/height. Running
+   * inside rAF puts our restore after that wipe in the same tick.
    */
   private ensureCameraDockResizePersistence(host: HTMLElement): void {
-    const isMinimized = host.classList.contains("minimized");
-
-    // 1. Restore the appropriate dimensions.
-    if (!isMinimized) {
-      host.style.width = this.cameraDockSize.width;
-      host.style.height = this.cameraDockSize.height;
-    }
-
-    // 2. (Re-)attach ResizeObserver to #camera-views if needed.
-    //    ApplicationV2 may replace the node on re-render.
+    // (Re-)attach ResizeObserver to #camera-views if needed.
+    // ApplicationV2 may replace the node on re-render.
     if (this.observedDockElement !== host) {
       this.cameraDockResizeObserver?.disconnect();
       this.observedDockElement = host;
@@ -52,6 +50,7 @@ export default class LiveKitUIManager {
         // Don't capture while minimized.
         if (!(target instanceof HTMLElement) || target.classList.contains("minimized")) return;
 
+        // Only capture genuine user-driven sizes; ignore Foundry's reset to "".
         if (target.style.width !== "" || target.style.height !== "") {
           this.cameraDockSize.width = target.style.width;
           this.cameraDockSize.height = target.style.height;
@@ -60,6 +59,25 @@ export default class LiveKitUIManager {
 
       this.cameraDockResizeObserver.observe(host);
     }
+
+    // Defer restore past CameraViews._updatePosition. Cancel any previously
+    // scheduled restore so rapid re-renders don't stack writes.
+    if (this.pendingRestoreFrame !== null) {
+      cancelAnimationFrame(this.pendingRestoreFrame);
+    }
+    this.pendingRestoreFrame = requestAnimationFrame(() => {
+      this.pendingRestoreFrame = null;
+
+      // A newer render may have replaced the observed element.
+      if (this.observedDockElement !== host) return;
+      // Don't fight a minimized dock.
+      if (host.classList.contains("minimized")) return;
+      // Nothing captured yet (first render after page load).
+      if (!this.cameraDockSize.width && !this.cameraDockSize.height) return;
+
+      host.style.width = this.cameraDockSize.width;
+      host.style.height = this.cameraDockSize.height;
+    });
   }
 
   addConnectionButtons(element: HTMLElement): void {
