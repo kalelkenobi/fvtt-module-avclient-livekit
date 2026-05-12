@@ -30,18 +30,6 @@ import type LiveKitClient from "./LiveKitClient";
 
 const log = new Logger();
 
-/**
- * Index into a preset family, returning `undefined` when the key is missing
- * (defensive lookup that satisfies strict ESLint rules even when
- * `noUncheckedIndexedAccess` is off).
- */
-function safeLookup(
-  family: Record<string, VideoPreset>,
-  key: string,
-): VideoPreset | undefined {
-  return family[key];
-}
-
 export default class LiveKitTrackManager {
   client: LiveKitClient;
 
@@ -696,7 +684,7 @@ export default class LiveKitTrackManager {
         ? (VideoPresets as unknown as Record<string, VideoPreset>)
         : (VideoPresets43 as unknown as Record<string, VideoPreset>);
     const preset =
-      safeLookup(family, heightKey) ?? VideoPresets43.h1080;
+      family[heightKey] ?? VideoPresets43.h1080;
     return { preset, family };
   }
 
