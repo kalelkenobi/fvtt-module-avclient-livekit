@@ -89,7 +89,12 @@
   overflow: auto;
   min-width: 250px;
   min-height: 175px;
+  gap: 0px;
   container-type: size;
+}
+
+#camera-views:not(.minimized) .camera-container {
+  gap: 5px;
 }
 
 #camera-views:not(.minimized).vertical {
@@ -102,8 +107,8 @@
 
 #camera-views:not(.minimized) .camera-view {
   aspect-ratio: 4 / 3;
-  max-width: calc(95cqh * 4 / 3);
-  max-height: calc(95cqw * 3 / 4);
+  max-width: calc(99cqh * 4 / 3);
+  max-height: calc(99cqw * 3 / 4);
   flex: 1;
 }
 
@@ -115,17 +120,10 @@
   justify-content: center;
 }
 
-/* 16/10 aspect ratio with letterboxing */
-
-/*
-#camera-views:not(.minimized) .camera-view {
-  aspect-ratio: 16 / 10;
-  max-width: calc(95cqh * 16 / 10);
-  max-height: calc(95cqw * 10 / 16);
-  flex: 1;
+#camera-views:not(.minimized) .video-container .user-avatar {
+  display: none;
 }
 
 #camera-views:not(.minimized) .video-container video {
   object-fit: contain;
 }
-*/
