@@ -1,5 +1,15 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.8.0k
+
+- feat: add per-user video resolution setting
+  - Single dropdown with all LiveKit presets (16:9 and 4:3 families)
+  - Key format: {aspect}_{heightKey} (e.g. 16x9_h720, 4x3_h1080)
+  - Default: 4x3_h1080 (preserves existing behavior)
+  - Simulcast layers auto-derived from chosen preset and family
+  - Resolution applies to video capture and can change live
+  - Always visible, placed below secondaryAudioSrc in settings
+
 ## 0.7.9k
 
 - refactor: tighten up render behaviour
