@@ -1,5 +1,12 @@
 # LiveKit A/V Client for FoundryVTT: Changelog
 
+## 0.7.9k
+
+- refactor: tighten up render behaviour
+- feat: make foundry cameras use native aspect ratio
+- docs: delete recorder docs
+- docs: update README, architecture, API, contributing, and AGENTS docs
+
 ## 0.7.8k
 
 - fix: final fix to size
