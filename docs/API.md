@@ -111,6 +111,7 @@ All settings are accessible via `game.settings.get("avclient-livekit", key)`.
 | Key                            | Type      | Default       | Description                                                                          |
 | ------------------------------ | --------- | ------------- | ------------------------------------------------------------------------------------ |
 | `secondaryAudioSrc`            | `string`  | `"disabled"`  | Secondary mic device id, or `"disabled"` to use only the primary source             |
+| `videoResolution`              | `string`  | `"4x3_h1080"` | Camera resolution from LiveKit presets, e.g. `16x9_h720`; simulcast is auto-derived |
 | `autoConnect`                  | `boolean` | `true`        | Auto-connect to the LiveKit server on world load                                     |
 | `displayConnectionQuality`     | `boolean` | `true`        | Show connection quality indicator on camera views                                    |
 | `breakoutRoomRegistry`         | `object`  | `{}`          | Mapping of user IDs to breakout room IDs                                             |

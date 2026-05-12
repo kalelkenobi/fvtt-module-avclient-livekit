@@ -228,6 +228,7 @@ Registers all module settings with Foundry's settings API:
 | Setting Key                   | Scope  | Description                                                           |
 | ----------------------------- | ------ | --------------------------------------------------------------------- |
 | `secondaryAudioSrc`           | client | Secondary mic device id (or `"disabled"`)                            |
+| `videoResolution`             | client | Camera resolution from LiveKit presets (16:9 or 4:3), e.g. `4x3_h1080` |
 | `autoConnect`                 | client | Auto-connect to the LiveKit server on world load                      |
 | `displayConnectionQuality`    | client | Show connection quality indicator dots on camera views                |
 | `liveKitConnectionSettings`   | world  | Server URL, room ID, API key, secret key                              |

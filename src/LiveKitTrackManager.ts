@@ -15,6 +15,8 @@ import {
   Track,
   TrackPublication,
   VideoCaptureOptions,
+  VideoPreset,
+  VideoPresets,
   VideoPresets43,
   VideoTrack,
   AudioPresets,
@@ -27,6 +29,18 @@ import { debounceRefreshView } from "./utils/helpers";
 import type LiveKitClient from "./LiveKitClient";
 
 const log = new Logger();
+
+/**
+ * Index into a preset family, returning `undefined` when the key is missing
+ * (defensive lookup that satisfies strict ESLint rules even when
+ * `noUncheckedIndexedAccess` is off).
+ */
+function safeLookup(
+  family: Record<string, VideoPreset>,
+  key: string,
+): VideoPreset | undefined {
+  return family[key];
+}
 
 export default class LiveKitTrackManager {
   client: LiveKitClient;
@@ -652,7 +666,8 @@ export default class LiveKitTrackManager {
       game.user?.id ?? "",
     );
 
-    const videoResolution = VideoPresets43.h1080.resolution;
+    const { preset } = this.resolvePresetSelection();
+    const videoResolution = preset.resolution;
 
     return typeof videoSrc === "string" &&
       videoSrc !== "disabled" &&
@@ -662,6 +677,49 @@ export default class LiveKitTrackManager {
           resolution: videoResolution,
         }
       : false;
+  }
+
+  /**
+   * Resolve the user's `videoResolution` setting into a concrete LiveKit
+   * preset and the preset family it belongs to. Falls back to
+   * `VideoPresets43.h1080` if the setting is missing or unrecognised.
+   */
+  resolvePresetSelection(): {
+    preset: VideoPreset;
+    family: Record<string, VideoPreset>;
+  } {
+    const raw =
+      game.settings?.get(MODULE_NAME, "videoResolution") ?? "4x3_h1080";
+    const [aspect, heightKey] = raw.split("_");
+    const family =
+      aspect === "16x9"
+        ? (VideoPresets as unknown as Record<string, VideoPreset>)
+        : (VideoPresets43 as unknown as Record<string, VideoPreset>);
+    const preset =
+      safeLookup(family, heightKey) ?? VideoPresets43.h1080;
+    return { preset, family };
+  }
+
+  /**
+   * Derive a small set of simulcast layers from the chosen preset and its
+   * family. Always returns layers strictly below the primary preset (standard
+   * simulcast pattern). Up to two layers are returned: the lowest layer and
+   * the lower preset closest to half the primary height.
+   */
+  deriveSimulcastLayers(
+    family: Record<string, VideoPreset>,
+    primary: VideoPreset,
+  ): VideoPreset[] {
+    const lower = Object.values(family)
+      .filter((p) => p.height < primary.height)
+      .sort((a, b) => a.height - b.height);
+    if (lower.length === 0) return [];
+    if (lower.length === 1) return [lower[0]];
+    const target = primary.height / 2;
+    const mid = lower.reduce((best, p) =>
+      Math.abs(p.height - target) < Math.abs(best.height - target) ? p : best,
+    );
+    return mid === lower[0] ? [mid] : [lower[0], mid];
   }
 
   setAudioEnabledState(enable: boolean): void {
@@ -759,13 +817,14 @@ export default class LiveKitTrackManager {
   }
 
   get trackPublishOptions(): TrackPublishOptions {
+    const { preset, family } = this.resolvePresetSelection();
     const trackPublishOptions: TrackPublishOptions = {
       audioPreset: AudioPresets.musicHighQualityStereo,
       forceStereo: true,
       simulcast: true,
       videoCodec: "vp9",
       backupCodec: { codec: "vp8" },
-      videoSimulcastLayers: [VideoPresets43.h720, VideoPresets43.h1440],
+      videoSimulcastLayers: this.deriveSimulcastLayers(family, preset),
     };
 
     // Apply advanced track publish options if enabled

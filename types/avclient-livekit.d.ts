@@ -102,6 +102,11 @@ declare global {
       blank: false;
       initial: "both";
     }>;
+    "avclient-livekit.videoResolution": foundry.data.fields.StringField<{
+      required: true;
+      blank: false;
+      initial: "4x3_h1080";
+    }>;
     "avclient-livekit.autoConnect": foundry.data.fields.BooleanField<{
       initial: true;
     }>;

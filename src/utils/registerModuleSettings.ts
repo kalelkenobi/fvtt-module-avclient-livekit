@@ -26,6 +26,46 @@ export default function registerModuleSettings(): void {
     },
   });
 
+  game.settings?.register(MODULE_NAME, "videoResolution", {
+    name: "LIVEKITAVCLIENT.videoResolution",
+    hint: "LIVEKITAVCLIENT.videoResolutionHint",
+    scope: "client",
+    config: true,
+    default: "4x3_h1080",
+    type: new foundry.data.fields.StringField({
+      required: true,
+      blank: false,
+      initial: "4x3_h1080",
+      choices: {
+        "16x9_h90": "LIVEKITAVCLIENT.videoResolutionChoice.16x9_h90",
+        "16x9_h180": "LIVEKITAVCLIENT.videoResolutionChoice.16x9_h180",
+        "16x9_h216": "LIVEKITAVCLIENT.videoResolutionChoice.16x9_h216",
+        "16x9_h360": "LIVEKITAVCLIENT.videoResolutionChoice.16x9_h360",
+        "16x9_h540": "LIVEKITAVCLIENT.videoResolutionChoice.16x9_h540",
+        "16x9_h720": "LIVEKITAVCLIENT.videoResolutionChoice.16x9_h720",
+        "16x9_h1080": "LIVEKITAVCLIENT.videoResolutionChoice.16x9_h1080",
+        "16x9_h1440": "LIVEKITAVCLIENT.videoResolutionChoice.16x9_h1440",
+        "16x9_h2160": "LIVEKITAVCLIENT.videoResolutionChoice.16x9_h2160",
+        "4x3_h120": "LIVEKITAVCLIENT.videoResolutionChoice.4x3_h120",
+        "4x3_h180": "LIVEKITAVCLIENT.videoResolutionChoice.4x3_h180",
+        "4x3_h240": "LIVEKITAVCLIENT.videoResolutionChoice.4x3_h240",
+        "4x3_h360": "LIVEKITAVCLIENT.videoResolutionChoice.4x3_h360",
+        "4x3_h480": "LIVEKITAVCLIENT.videoResolutionChoice.4x3_h480",
+        "4x3_h540": "LIVEKITAVCLIENT.videoResolutionChoice.4x3_h540",
+        "4x3_h720": "LIVEKITAVCLIENT.videoResolutionChoice.4x3_h720",
+        "4x3_h1080": "LIVEKITAVCLIENT.videoResolutionChoice.4x3_h1080",
+        "4x3_h1440": "LIVEKITAVCLIENT.videoResolutionChoice.4x3_h1440",
+      },
+    }),
+    onChange: () => {
+      game.webrtc?.client._liveKitClient.trackManager
+        .changeVideoSource()
+        .catch((error: unknown) => {
+          log.error("videoResolution: Error changing video source", error);
+        });
+    },
+  });
+
   game.settings?.register(MODULE_NAME, "autoConnect", {
     name: "LIVEKITAVCLIENT.autoConnect",
     hint: "LIVEKITAVCLIENT.autoConnectHint",
