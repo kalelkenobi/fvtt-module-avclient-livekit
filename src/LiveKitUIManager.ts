@@ -43,8 +43,7 @@ export default class LiveKitUIManager {
       this.observedDockElement = host;
 
       this.cameraDockResizeObserver ??= new ResizeObserver((entries) => {
-        const entry = entries[0];
-        if (!entry) return;
+        const entry = entries[0];        
         const target = entry.target;
 
         // Don't capture while minimized.
@@ -401,7 +400,7 @@ export default class LiveKitUIManager {
     const dock =
       html.id === "camera-views"
         ? html
-        : ((html.closest("#camera-views") as HTMLElement | null) ??
+        : ((html.closest("#camera-views")) ??
           document.getElementById("camera-views"));
     if (dock instanceof HTMLElement) {
       this.ensureCameraDockResizePersistence(dock);
