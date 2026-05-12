@@ -130,6 +130,7 @@ export default class LiveKitTrackManager {
       this.audioTrack = null;
       this.cleanupMixer();
       game.user?.broadcastActivity({ av: { muted: true } });
+      this.client.render();
     }
 
     if (
@@ -145,6 +146,7 @@ export default class LiveKitTrackManager {
         this.audioTrack = null;
         this.cleanupMixer();
         game.user?.broadcastActivity({ av: { muted: true } });
+        this.client.render();
       } else {
         await this.initializeAudioTrack();
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -154,7 +156,7 @@ export default class LiveKitTrackManager {
             this.trackPublishOptions,
           );
           game.user?.broadcastActivity({ av: { muted: false } });
-          this.client.avMaster.render();
+          this.client.render();
         }
       }
     } else {
@@ -195,6 +197,7 @@ export default class LiveKitTrackManager {
         this.videoTrack.stop();
         this.videoTrack = null;
         game.user?.broadcastActivity({ av: { hidden: true } });
+        this.client.render();
       } else {
         await this.initializeVideoTrack();
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
@@ -210,7 +213,7 @@ export default class LiveKitTrackManager {
             this.attachVideoTrack(this.videoTrack, userVideoElement);
           }
           game.user?.broadcastActivity({ av: { hidden: false } });
-          this.client.avMaster.render();
+          this.client.render();
         }
       }
     } else {

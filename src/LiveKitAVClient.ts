@@ -624,6 +624,9 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
       );
       this._liveKitClient.trackManager.videoTrack
         .mute()
+        .then(() => {
+          this._liveKitClient.render();
+        })
         .catch((error: unknown) => {
           log.error("Error muting video track:", error);
         });
@@ -645,11 +648,13 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
       );
       this._liveKitClient.trackManager.videoTrack
         .unmute()
+        .then(() => {
+          this._liveKitClient.render();
+        })
         .catch((error: unknown) => {
           log.error("Error un-muting video track:", error);
         });
     }
-    this.master.render();
   }
 
   /* -------------------------------------------- */
@@ -771,15 +776,17 @@ export default class LiveKitAVClient extends foundry.av.AVClient {
       this.master.broadcast(isAlways);
     }
 
-    // Re-render the AV camera view
+    // Re-render the AV camera view. Audio/video source changes are intentionally
+    // not listed here: the track manager owns rendering for those paths so that
+    // direct callers (e.g. `registerModuleSettings` onChange handlers and
+    // `updateLocalStream`) also get rendered without each having to do it.
     const renderChange = [
       "client.audioSink",
       "client.muteAll",
       "client.disableVideo",
       "client.nameplates",
     ].some((k) => keys.has(k));
-    if (audioSourceChange || videoSourceChange || renderChange)
-      this.master.render();
+    if (renderChange) this._liveKitClient.render();
 
     // Refresh the main settings page if it is open, in case one of our settings has changed
     if (game.settings?.sheet.rendered) {

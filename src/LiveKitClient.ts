@@ -50,7 +50,7 @@ export default class LiveKitClient {
 
     this.render = foundry.utils.debounce(
       this.avMaster.render.bind(this.liveKitAvClient),
-      2000,
+      250,
     );
 
     this.trackManager = new LiveKitTrackManager(this);
@@ -275,8 +275,9 @@ export default class LiveKitClient {
 
   onReconnected(): void {
     log.info("Reconnect issued");
-    // Re-render just in case users changed
-    this.render();
+    // No render here: participant churn during reconnect fires
+    // ParticipantConnected / ParticipantDisconnected, each of which already
+    // schedules a debounced render.
   }
 
   onReconnecting(): void {
